@@ -1,0 +1,6 @@
+D:\wxj\learningMaterial\扩展类\Perfect公司通用类\PFHelper\bin\Debug\PFHelper.dll
+D:\wxj\learningMaterial\扩展类\Perfect公司通用类\PFHelper\bin\Debug\PFHelper.pdb
+D:\wxj\learningMaterial\扩展类\Perfect公司通用类\PFHelper\obj\Debug\PFHelper.csprojResolveAssemblyReference.cache
+D:\wxj\learningMaterial\扩展类\Perfect公司通用类\PFHelper\obj\Debug\PFHelper.dll
+D:\wxj\learningMaterial\扩展类\Perfect公司通用类\PFHelper\obj\Debug\PFHelper.pdb
+D:\wxj\learningMaterial\扩展类\Perfect公司通用类\PFHelper\bin\Debug\editsuite.dll

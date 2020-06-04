@@ -1,0 +1,36 @@
+﻿ul.nav-tabs {
+    background-color:#e7f2f9;
+    border-bottom: 0px;
+    margin-left:0px;/*兼容模式下,有这句似乎更好*/
+}
+.nav-tabs > li {
+  float: left;
+  margin-bottom: 0px;
+}
+
+.nav-tabs > li > a {
+    margin-right: 0px;
+  border: 0px;
+  color:black;
+  border-radius: 0px 0px 0 0;
+  transition: background 0.2s ease-in;
+}
+.nav-tabs > li.active > a,
+.nav-tabs > li > a:hover,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    border:0px;
+  background-color:#3B9FE1;
+  color:white;
+}
+.nav-tabs > li > a button.close {
+    float:none;
+    color:red;
+    margin-left:2px;
+    line-height: 14px;
+    /*opacity: 0.4;*/
+}
+
+.tab-container .tab-content {
+    padding-top: 0px;
+}

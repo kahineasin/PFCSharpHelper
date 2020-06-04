@@ -1,0 +1,7 @@
+
+time:[2020/1/23 7:53:27]
+System.Threading.ThreadAbortException: Thread was being aborted.
+   at System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   at System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   at Perfect.PFListenEmailTask.StartThread(Object ps) in e:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:line 773
+

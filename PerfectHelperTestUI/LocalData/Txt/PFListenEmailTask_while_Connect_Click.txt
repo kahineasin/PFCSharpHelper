@@ -1,0 +1,1 @@
+监听邮件的while的_emailManager.Connect_Click()执行成功，时间:2020/4/20 14:26:50，邮件数：398

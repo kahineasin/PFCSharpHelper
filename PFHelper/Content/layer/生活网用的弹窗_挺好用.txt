@@ -1,0 +1,9 @@
+﻿不想用这个的话,也可以用自己写的$.uedWidget('ued.Dialog'
+
+用法:(需引用layerTool.js)
+1.
+  layer.alert(data.Message);
+2.
+  layer.confirm("确定删除吗?", function () {
+      //do something
+  });

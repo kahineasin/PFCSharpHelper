@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B77BAC1A-EB0C-4318-97EA-9C9BED7BFEE2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Perfect</RootNamespace>
+    <AssemblyName>PerfectHelper</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Aspose.Cells, Version=5.3.1.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\Aspose.Cells.dll</HintPath>
+    </Reference>
+    <Reference Include="Aspose.Words">
+      <HintPath>Lib\Aspose.Words.dll</HintPath>
+    </Reference>
+    <Reference Include="BouncyCastle.Crypto, Version=1.8.3.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
+      <HintPath>..\..\SaveDbReport\packages\BouncyCastle.1.8.3.1\lib\BouncyCastle.Crypto.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="editsuite">
+      <HintPath>..\package\editsuite.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Protobuf, Version=3.6.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <HintPath>..\..\SaveDbReport\packages\Google.Protobuf.3.6.1\lib\net45\Google.Protobuf.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.85.4.369, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="MySql.Data, Version=8.0.19.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\..\SaveDbReport\packages\MySql.Data.8.0.19\lib\net452\MySql.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\package\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\..\SaveDbReport\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Mvc, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Ubiety.Dns.Core, Version=2.2.1.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\..\SaveDbReport\packages\MySql.Data.8.0.19\lib\net452\Ubiety.Dns.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Exporter\XlsxExport1048576.cs" />
+    <Compile Include="Exporter\XlsExport65535.cs" />
+    <Compile Include="Exporter\XlsxEPPlusExport.cs" />
+    <Compile Include="PFExcelHelper.cs" />
+    <Compile Include="PFMqConfig.cs" />
+    <Compile Include="PFMqHelper.cs" />
+    <Compile Include="PFPivotTable.cs" />
+    <Compile Include="PFSqlUpdateValidateHelper.cs" />
+    <Compile Include="ZipUtility.cs" />
+    <Compile Include="Config\PFConfigMapper.cs" />
+    <Compile Include="DotNet\CheckBoxColumn.cs" />
+    <Compile Include="Exporter.cs" />
+    <Compile Include="Exporter\ApiData.cs" />
+    <Compile Include="Exporter\ICompress.cs" />
+    <Compile Include="Exporter\IDataGetter.cs" />
+    <Compile Include="Exporter\IExport.cs" />
+    <Compile Include="Exporter\IFormatter.cs" />
+    <Compile Include="Exporter\NoneCompress.cs" />
+    <Compile Include="Exporter\WordExport.cs" />
+    <Compile Include="Exporter\XlsExport.cs" />
+    <Compile Include="Exporter\XlsxExport.cs" />
+    <Compile Include="PFDataHelperNet45.cs" />
+    <Compile Include="PFDataHelper.cs" />
+    <Compile Include="PFNetHelper.cs" />
+    <Compile Include="PFPath.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sql\ISqlExecute.cs" />
+    <Compile Include="Sql\MySqlExecute.cs" />
+    <Compile Include="Sql\SqlExecute.cs" />
+    <Compile Include="PFTaskHelper.cs" />
+    <Compile Include="ZipHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\layer\layer.js" />
+    <Content Include="Content\layer\layerTool.js" />
+    <Content Include="Content\layer\mobile\layer.js" />
+    <Content Include="Content\layer\mobile\need\layer.css" />
+    <Content Include="Content\layer\theme\default\icon-ext.png" />
+    <Content Include="Content\layer\theme\default\icon.png" />
+    <Content Include="Content\layer\theme\default\layer.css" />
+    <Content Include="Content\layer\theme\default\loading-0.gif" />
+    <Content Include="Content\layer\theme\default\loading-1.gif" />
+    <Content Include="Content\layer\theme\default\loading-2.gif" />
+    <Content Include="Content\layer\生活网用的弹窗_挺好用.txt" />
+    <Content Include="Content\ChinaProvinceMap.txt" />
+    <Content Include="Content\PFGrid\img\treeview-default-line.gif" />
+    <Content Include="Content\PFGrid\img\treeview-default.gif" />
+    <Content Include="Content\PFGrid\img\treeview-red-line.gif" />
+    <Content Include="Content\PFGrid\img\treeview-red.gif" />
+    <Content Include="Content\PFGrid\PFGrid.css" />
+    <Content Include="Content\Perfect.css" />
+    <Content Include="Content\PFTab\tab.css" />
+    <Content Include="Content\PFTab\tab.js" />
+    <Content Include="Lib\Aspose.Cells.dll" />
+    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="Resources\loading3.gif" />
+    <Content Include="ReadMe.txt" />
+    <Content Include="Scripts\jquery.validate.addition.js" />
+    <Content Include="Scripts\pfComponent.js" />
+    <Content Include="Scripts\pfCommon.js" />
+    <Content Include="Scripts\pfTable.js" />
+    <Content Include="Scripts\pfUtil.js" />
+    <Content Include="XmlConfig\FieldSets.xml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Lib\Aid\" />
+    <Folder Include="Scripts\My97DatePicker\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Lib\Aspose.Cells.dll.refresh" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

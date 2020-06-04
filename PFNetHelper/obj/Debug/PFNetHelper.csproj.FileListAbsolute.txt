@@ -1,0 +1,5 @@
+E:\svn\SaveDbReport\PFHelper\PFNetHelper\obj\Debug\PFNetHelper.csprojResolveAssemblyReference.cache
+E:\svn\SaveDbReport\PFHelper\PFNetHelper\bin\Debug\PFNetHelper.dll
+E:\svn\SaveDbReport\PFHelper\PFNetHelper\bin\Debug\PFNetHelper.pdb
+E:\svn\SaveDbReport\PFHelper\PFNetHelper\obj\Debug\PFNetHelper.dll
+E:\svn\SaveDbReport\PFHelper\PFNetHelper\obj\Debug\PFNetHelper.pdb

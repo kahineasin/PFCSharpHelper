@@ -1,0 +1,70 @@
+
+time:[2020/4/14 9:49:34]
+System.IO.IOException: 无法将数据写入传输连接: 您的主机中的软件中止了一个已建立的连接。。 ---> System.Net.Sockets.SocketException: 您的主机中的软件中止了一个已建立的连接。
+   在 System.Net.Sockets.Socket.Send(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags)
+   在 System.Net.Sockets.NetworkStream.Write(Byte[] buffer, Int32 offset, Int32 size)
+   --- 内部异常堆栈跟踪的结尾 ---
+   在 System.Net.Sockets.NetworkStream.Write(Byte[] buffer, Int32 offset, Int32 size)
+   在 Perfect.PFEmailManager.Retrieve_Click(Int32 mailNum) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 8519
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 893
+
+
+time:[2020/4/14 9:51:26]
+System.InvalidOperationException: 线程间操作无效: 从不是创建控件“bodyTBox”的线程访问它。
+   在 System.Windows.Forms.Control.get_Handle()
+   在 System.Windows.Forms.Control.set_WindowText(String value)
+   在 System.Windows.Forms.TextBoxBase.set_WindowText(String value)
+   在 System.Windows.Forms.Control.set_Text(String value)
+   在 System.Windows.Forms.TextBoxBase.set_Text(String value)
+   在 System.Windows.Forms.TextBox.set_Text(String value)
+   在 PerfectHelperTestUI.TestEmailForm.<testListerBtn_Click>b__8_0(PFEmail email) 位置 E:\svn\SaveDbReport\PFHelper\PerfectHelperTestUI\TestEmailForm.cs:行号 75
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 968
+
+
+time:[2020/4/14 9:53:01]
+System.InvalidOperationException: 线程间操作无效: 从不是创建控件“bodyTBox”的线程访问它。
+   在 System.Windows.Forms.Control.get_Handle()
+   在 System.Windows.Forms.Control.set_WindowText(String value)
+   在 System.Windows.Forms.TextBoxBase.set_WindowText(String value)
+   在 System.Windows.Forms.Control.set_Text(String value)
+   在 System.Windows.Forms.TextBoxBase.set_Text(String value)
+   在 System.Windows.Forms.TextBox.set_Text(String value)
+   在 PerfectHelperTestUI.TestEmailForm.<testListerBtn_Click>b__8_0(PFEmail email) 位置 E:\svn\SaveDbReport\PFHelper\PerfectHelperTestUI\TestEmailForm.cs:行号 75
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 968
+
+
+time:[2020/4/14 9:53:44]
+System.InvalidOperationException: 线程间操作无效: 从不是创建控件“bodyTBox”的线程访问它。
+   在 System.Windows.Forms.Control.get_Handle()
+   在 System.Windows.Forms.Control.set_WindowText(String value)
+   在 System.Windows.Forms.TextBoxBase.set_WindowText(String value)
+   在 System.Windows.Forms.Control.set_Text(String value)
+   在 System.Windows.Forms.TextBoxBase.set_Text(String value)
+   在 System.Windows.Forms.TextBox.set_Text(String value)
+   在 PerfectHelperTestUI.TestEmailForm.<testListerBtn_Click>b__8_0(PFEmail email) 位置 E:\svn\SaveDbReport\PFHelper\PerfectHelperTestUI\TestEmailForm.cs:行号 75
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 968
+
+
+time:[2020/4/14 9:53:49]
+System.InvalidOperationException: 线程间操作无效: 从不是创建控件“bodyTBox”的线程访问它。
+   在 System.Windows.Forms.Control.get_Handle()
+   在 System.Windows.Forms.Control.set_WindowText(String value)
+   在 System.Windows.Forms.TextBoxBase.set_WindowText(String value)
+   在 System.Windows.Forms.Control.set_Text(String value)
+   在 System.Windows.Forms.TextBoxBase.set_Text(String value)
+   在 System.Windows.Forms.TextBox.set_Text(String value)
+   在 PerfectHelperTestUI.TestEmailForm.<testListerBtn_Click>b__8_0(PFEmail email) 位置 E:\svn\SaveDbReport\PFHelper\PerfectHelperTestUI\TestEmailForm.cs:行号 75
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 968
+
+
+time:[2020/4/14 10:00:39]
+System.FormatException: Base-64 字符数组或字符串的长度无效。
+   在 System.Convert.FromBase64_Decode(Char* startInputPtr, Int32 inputLength, Byte* startDestPtr, Int32 destLength)
+   在 System.Convert.FromBase64CharPtr(Char* inputPtr, Int32 inputLength)
+   在 System.Convert.FromBase64String(String s)
+   在 Perfect.PFDataHelper.Decode(String v, PFEncodeType byteEncodeType, PFEncodeType encodeType) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 3202
+   在 Perfect.PFEmail..ctor(IList`1 inmessages) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 7765
+   在 Perfect.PFEmail..ctor(Int32 mailNum, IList`1 messages) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 7345
+   在 Perfect.PFEmailManager.Retrieve_Click(Int32 mailNum) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 8610
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 893
+

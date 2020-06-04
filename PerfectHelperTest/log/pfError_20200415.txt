@@ -1,0 +1,94 @@
+
+time:[2020/4/15 11:19:58]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 11:19:58]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 11:19:59]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Net.UnsafeNclNativeMethods.OSSOCK.recv(IntPtr socketHandle, Byte* pinnedBuffer, Int32 len, SocketFlags socketFlags)
+   在 System.Net.Sockets.Socket.Receive(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags, SocketError& errorCode)
+   在 System.Net.Sockets.Socket.Receive(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags)
+   在 System.Net.Sockets.NetworkStream.Read(Byte[] buffer, Int32 offset, Int32 size)
+   在 System.IO.StreamReader.ReadBuffer()
+   在 System.IO.StreamReader.ReadLine()
+   在 Perfect.PFEmailManager.Retrieve_Click(Int32 mailNum) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 8649
+
+
+time:[2020/4/15 11:19:59]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 Perfect.PFEmailManager.Retrieve_Click(Int32 mailNum) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 8654
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 893
+
+
+time:[2020/4/15 15:24:20]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:24:20]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:24:20]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:48:32]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:48:32]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:48:32]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:57:36]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:57:36]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+
+
+time:[2020/4/15 15:57:36]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 1007
+

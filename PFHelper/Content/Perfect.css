@@ -1,0 +1,23 @@
+﻿
+        /*form里的input的jquery验证错误时的样式*/
+        .kv-item .kv-item-content label.error{
+                /*width:unset;*//*ie不支持unset*/
+                width:auto;
+                color: #fc0000;
+        }
+        /*数字列右对齐*/
+        .table table tbody tr td.col-r{
+            text-align:right;padding-right: 9px;
+        }
+        /*复盖dataTables的样式,多表头时,只有最后一行才加bottom(通过pfTable的js添加)--wxj20180716*/
+        table.dataTable thead th, table.dataTable thead td {
+            border-bottom:inherit;
+        }
+        /*修复:日期组件的背景图使禁用时的背景色无效*/
+        input.Wdate[type="text" i]:disabled{
+	        background-color: rgb(235, 235, 228);
+        }
+        /*a按钮禁用样式*/
+        .sapar-btn[disabled=disabled]{
+            opacity:0.5;
+        }

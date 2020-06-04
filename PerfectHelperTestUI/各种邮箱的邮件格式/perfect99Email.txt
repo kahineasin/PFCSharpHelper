@@ -1,0 +1,21 @@
++OK 874 octets
+Received: from dnbwxj (unknown [192.168.205.111])
+	by APP6 (Coremail) with SMTP id LgEQrADnLnMk_SNeM4kFAA--.44197S3;
+	Sun, 19 Jan 2020 14:54:28 +0800 (CST)
+Disposition-Notification-To: =?utf-8?B?5Zue5omn5L+h5oGv?=
+MIME-Version: 1.0
+From: wxj@perfect99.com
+To: wxj@perfect99.com
+Date: 19 Jan 2020 14:54:21 +0800
+Subject: =?utf-8?B?UEZFbWFpbE1xX3Byb2R1Y2VyX+S8muWRmOi1hOaWmeihqA==?=
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: base64
+X-CM-TRANSID:LgEQrADnLnMk_SNeM4kFAA--.44197S3
+Message-Id:<5E23FD24.00B957.22436@m-x.perfect99.com>
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRUUUUUUUUU
+	=
+X-CM-SenderInfo: hz0mq15huivurwzzhudrp/
+
+DQo8cD4yMDE5LjAx5pyI57uT5pWw5o2u5aSH5Lu95oOF5Ya1OjxwPg0KPG9sPg0KPGxp
+PmFhYTwvbGk+DQo8bGk+YmJiPC9saT4NCjwvb2w+DQo=

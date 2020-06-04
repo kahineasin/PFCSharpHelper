@@ -1,0 +1,62 @@
++OK 3243 octets
+Received: from m15-22.126.com (unknown [220.181.15.22])
+	by APP1 (Coremail) with SMTP id KQEQrABHc5J4UiZeCPABAA--.13103S2;
+	Tue, 21 Jan 2020 09:23:04 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+	s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=tw22h
+	wpxS+UhuVLbiP01ZDm8fNLlfm3EZ9aGGwbkbeY=; b=mVGSm7MIFLq/gPp9Cu8Ya
+	Mn4WXn4I0E/2zUPMXdNcOxu8DqzMvwBzU3r7lbA5W5YEgbywjgu+2blziITPVTwW
+	Lnb896Lbys55PRRnMmuXpREI1GlLG/iaRwLMoTMEAHCkp/ObT30AcUyRg3omxDNM
+	FbXtYxZw264nubvoX4jSN4=
+Received: from miuxiaoniao$126.com ( [113.117.218.41] ) by
+ ajax-webmail-wmsvr22 (Coremail) ; Tue, 21 Jan 2020 09:25:08 +0800 (CST)
+X-Originating-IP: [113.117.218.41]
+Date: Tue, 21 Jan 2020 09:25:08 +0800 (CST)
+From: =?GBK?B?z/7B4Q==?= <miuxiaoniao@126.com>
+To: wxj@perfect99.com
+Subject: =?GBK?Q?PFEmailMq=5Fproducer?=
+ =?GBK?Q?=5Ffrom126Mail=5F=BB=E1=D4=B1=D7=CA=C1=CF=B1=ED?=
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.10 build 20190724(ac680a23)
+ Copyright (c) 2002-2020 www.mailtech.cn 126com
+X-CM-CTRLDATA: DULMpmZvb3Rlcl9odG09MTY0OjU2
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_43558_1287323805.1579569908815"
+MIME-Version: 1.0
+Message-ID: <3b48209e.2b3b.16fc5b40c4f.Coremail.miuxiaoniao@126.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:FsqowADn7s71UiZeuz09AA--.12030W
+X-CM-SenderInfo: xplx5x5drqxtbr6rjloofrz/1tbi2wCwsV16GaY4HQABsm
+Authentication-Results: APP1; spf=pass smtp.mail=miuxiaoniao@126.com;
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7jjvjm3AaLaJ3UjIYCTnIWjp_UUUOP7k0a2IF6r1xM7kC6x804xWl14x267AK
+	xVWUJVW8JwAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r1j
+	6r4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r1j6r
+	4UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVAYj202j2C_Jr0_Gr1l5I8CrVACY4xI
+	64kE6c02F40Ex7xfMc02F40Ew4AK048IF2xKxVW8JVW5JwAv7VC0I7IYx2IY67AKxVWUJV
+	WUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAK
+	I48JM4xvF2IEb7IF0Fy264kE64k0F24lFcxC0VAYjxAxZF0Ex2IqxwCjxxvEa2IrMxkFs2
+	0EY4vE44CYbxCE4x80FwCY02Avz4vE14v_KwCY0x0Ix7I2Y4AK64vIr41lcIIF0xvE2Ix0
+	cI8IcVAFwI0_Jr0_JF4lcIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCYIxAIcVC2z2
+	80aVAFwI0_Jr0_Gr1lcIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_Gr1l42xK82IYc2Ij64vI
+	r41l4x8a6x804xWl4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUGVWUWw
+	C20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1j6r15MIIYrxkI7VAKI48J
+	MIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DYxBIdaVFxhVjvjDU0xZFpf9x0zR3fQiUUU
+	UU=
+
+------=_Part_43558_1287323805.1579569908815
+Content-Type: text/plain; charset=GBK
+Content-Transfer-Encoding: base64
+
+MjAxOS4wMdTCveHK/b7dsbi33cfpv/Y6CgphYWEKYmJiCgo=
+------=_Part_43558_1287323805.1579569908815
+Content-Type: text/html; charset=GBK
+Content-Transfer-Encoding: base64
+
+PGRpdiBzdHlsZT0ibGluZS1oZWlnaHQ6MS43O2NvbG9yOiMwMDAwMDA7Zm9udC1zaXplOjE0cHg7
+Zm9udC1mYW1pbHk6QXJpYWwiPjxkaXY+PHA+MjAxOS4wMdTCveHK/b7dsbi33cfpv/Y6PC9wPjxw
+Pgo8L3A+PG9sPgo8bGk+YWFhPC9saT4KPGxpPmJiYjwvbGk+Cjwvb2w+PGJyPjwvZGl2PjwvZGl2
+Pjxicj48YnI+PHNwYW4gdGl0bGU9Im5ldGVhc2Vmb290ZXIiPjxwPiZuYnNwOzwvcD48L3NwYW4+
+
+------=_Part_43558_1287323805.1579569908815--

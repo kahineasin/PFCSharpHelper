@@ -1,0 +1,71 @@
+﻿     .hitarea,.linearea
+    {
+        height: 16px;
+        width: 16px; 
+        vertical-align: inherit;
+        display: inline-block;
+        cursor: pointer;
+    }
+    .hitarea
+    {
+        background: url(/Content/PFGrid/img/treeview-red.gif) no-repeat;
+    }
+    .hitarea-expanded
+    {
+     background-position:-64px -25px;
+    }
+    .hitarea-closed
+    {
+           background-position: -80px -3px;
+    }
+    .linearea-urd
+    {
+        background: url(/Content/PFGrid/img/treeview-default-line.gif) 0px 0px no-repeat;
+    }
+    .linearea-ud
+    {
+        background: url(/Content/PFGrid/img/treeview-default-line.gif) 0px -50px no-repeat;
+    }
+    .linearea-ur
+    {
+        background: url(/Content/PFGrid/img/treeview-default-line.gif) 0px -1766px no-repeat;
+    }
+    /*数字列右对齐*/
+    .table table tbody tr td.col-r{
+        text-align:right;padding-right: 9px;
+    }
+    .table table tbody tr td.col-h{
+        display:none;
+    }
+    /*超链接列*/
+        table tbody tr td.col-a{
+        text-decoration:underline ;
+        cursor:pointer;
+    }
+    /*为了便于只设置.table的高度,就能使.table-box滚动--benjamin20190712*/
+    .table {
+        display:flex;flex-flow:column;
+    }
+    .table-box {
+        position:relative;width:100%;height:100%;overflow: auto;flex-grow:1;
+    }
+
+    /*table.pfTreeGrid tbody tr.selected,
+    table.pfTreeColumnGrid tbody tr.selected {
+        background-color: #B0BED9;
+    }*/
+
+
+    table.pfTreeGrid tbody tr.odd, table.pfTreeColumnGrid tbody tr.odd{
+    background-color:white;
+}
+table.pfTreeGrid tbody tr.even, table.pfTreeColumnGrid tbody tr.even{
+    background-color:#eff6fa;
+}
+table.pfTreeGrid tbody tr.selected, table.pfTreeColumnGrid tbody tr.selected {
+    background-color: #B0BED9 ;
+}
+/*参考框架中.table table tbody tr:hover的样式,用于DataTables--wxj20180817*/
+table.pfTreeGrid tbody tr:hover, table.pfTreeColumnGrid tbody tr:hover{
+    background: #DCF0FC !important;
+}

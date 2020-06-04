@@ -1,0 +1,29 @@
+
+time:[2020/4/9 16:53:56]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Threading.Thread.SleepInternal(Int32 millisecondsTimeout)
+   在 System.Threading.Thread.Sleep(Int32 millisecondsTimeout)
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 804
+
+
+time:[2020/4/9 16:53:56]
+System.Threading.ThreadAbortException: 正在中止线程。
+   在 System.Net.UnsafeNclNativeMethods.OSSOCK.recv(IntPtr socketHandle, Byte* pinnedBuffer, Int32 len, SocketFlags socketFlags)
+   在 System.Net.Sockets.Socket.Receive(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags, SocketError& errorCode)
+   在 System.Net.Sockets.Socket.Receive(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags)
+   在 System.Net.Sockets.NetworkStream.Read(Byte[] buffer, Int32 offset, Int32 size)
+   在 System.IO.StreamReader.ReadBuffer()
+   在 System.IO.StreamReader.ReadLine()
+   在 Perfect.PFEmailManager.Retrieve_Click(Int32 mailNum) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFDataHelper.cs:行号 8419
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 689
+
+
+time:[2020/4/9 17:01:08]
+System.TypeInitializationException: “Perfect.ProjDataHelper”的类型初始值设定项引发异常。 ---> System.NullReferenceException: 未将对象引用设置到对象的实例。
+   在 Perfect.ProjDataHelper..cctor() 位置 E:\svn\SaveDbReport\PFHelper\PerfectHelperTest\Helper\ProjDataHelper.cs:行号 49
+   --- 内部异常堆栈跟踪的结尾 ---
+   在 Perfect.ProjDataHelper.GetLastCMonthByDate(DateTime date)
+   在 Perfect.TestMonthDataCompareCntConsumer.handle(String consumerTag, PFMqMessage message) 位置 E:\svn\SaveDbReport\PFHelper\PerfectHelperTest\Mq\TestMonthDataCompareCntConsumer.cs:行号 16
+   在 Perfect.PFMq.<>c__DisplayClass3_0.<BuildPFEmailMqConsumer>b__0(PFEmail email) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFMqHelper.cs:行号 248
+   在 Perfect.PFListenEmailTask.StartThread(Object ps) 位置 E:\svn\SaveDbReport\PFHelper\PFHelper\PFTaskHelper.cs:行号 757
+

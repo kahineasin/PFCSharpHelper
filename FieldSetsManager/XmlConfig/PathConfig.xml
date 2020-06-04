@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Systems>
+  <YjQuery2018>
+    <Path>E:\svn\businessSys2018_66\YJQuery.Web\Configs\XmlConfig\FieldSets.xml</Path>
+  </YjQuery2018>
+  <DirectSeller>    
+    <Path>E:\svn\DirectSeller_66\XmlConfig\FieldSets.xml</Path>
+  </DirectSeller>
+  <PerfectLife>
+    <Path>E:\svn\PefectLife_66\Perfect\Web2\Configs\XmlConfig\FieldSets.xml</Path>
+  </PerfectLife>
+  <YjQuery>
+  </YjQuery>
+</Systems>
