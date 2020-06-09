@@ -526,6 +526,24 @@ namespace Perfect
                 return null;
             }
         }
+        public DbDataReader GetDataReader3(string sqlstr)
+        {
+            sqlCmd.Connection = this._sqlconnection;
+            sqlCmd.CommandType = CommandType.Text;
+            sqlCmd.CommandText = sqlstr;
+            if (this._sqlconnection.State == ConnectionState.Closed)
+                this._sqlconnection.Open();
+            try
+            {
+                return sqlCmd.ExecuteReader(CommandBehavior.CloseConnection);
+            }
+            catch (System.Exception ex)
+            {
+                Error = ex;
+                this._sqlconnection.Close();
+                return null;
+            }
+        }
 
         /// <summary>
         /// 执行查询操作
@@ -1656,7 +1674,7 @@ end
             return true;
         }
 
-        public bool CloseReader(ref SqlDataReader reader)
+        public bool CloseReader( DbDataReader reader)
         {
             sqlCmd.Cancel();//如果没有这句,数据很多时 dr.Close 会很慢 https://www.cnblogs.com/xyz0835/p/3379676.html
             reader.Close();

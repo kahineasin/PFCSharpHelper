@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.Common;
+using System.Collections;
 
 namespace Perfect
 {
@@ -81,7 +82,8 @@ namespace Perfect
     }
     #endregion
 
-    public class MySqlExecute : MySqlBase// SqlBase<MySqlConnection>//, ISqlExecute
+    public class MySqlExecute : MySqlBase// SqlBase<MySqlConnection>
+        , ISqlExecute
     {
 
         protected MySqlCommand sqlCmd = new MySqlCommand();
@@ -242,6 +244,23 @@ namespace Perfect
                 return null;
             }
         }
+        public DbDataReader GetDataReader3(string sqlstr)
+        {
+            sqlCmd.Connection = this._sqlconnection;
+            sqlCmd.CommandType = CommandType.Text;
+            sqlCmd.CommandText = sqlstr;
+            OpenConn();
+            try
+            {
+                return sqlCmd.ExecuteReader(CommandBehavior.CloseConnection);
+            }
+            catch (System.Exception ex)
+            {
+                Error = ex;
+                this._sqlconnection.Close();
+                return null;
+            }
+        }
 
         /// <summary>
         /// 执行sql语句,返回true表示执行成功,false表示执行失败
@@ -372,11 +391,12 @@ namespace Perfect
         {
             if (insert == null)
             {
-                insert = new SqlInsertCollection
-                {
-                    FieldQuotationCharacterL = "`",
-                    FieldQuotationCharacterR = "`"
-                };
+                //insert = new SqlInsertCollection
+                //{
+                //    FieldQuotationCharacterL = "`",
+                //    FieldQuotationCharacterR = "`"
+                //};
+                insert = new MySqlInsertCollection();
                 for (int i = 0; i < rdr.FieldCount; i++)
                 {
                     var updateItem = new SqlUpdateItem { Key = rdr.GetName(i), VType = rdr.GetFieldType(i) };
@@ -469,6 +489,308 @@ namespace Perfect
             return true;
         }
 
+        public bool HugeInsertReaderIf(SqlInsertCollection insert,
+            DbDataReader rdr, string tableName,
+            Action<BatchInsertOption> insertOptionAction = null,
+            Func<SqlInsertCollection,bool> rowAction = null,
+            Action<int> sqlRowsCopiedAction = null,
+            bool stopIfError=true)
+        {
+            if (insert == null)
+            {
+                //insert = new SqlInsertCollection
+                //{
+                //    FieldQuotationCharacterL = "`",
+                //    FieldQuotationCharacterR = "`"
+                //};
+                insert = new MySqlInsertCollection();
+                for (int i = 0; i < rdr.FieldCount; i++)
+                {
+                    var updateItem = new SqlUpdateItem { Key = rdr.GetName(i), VType = rdr.GetFieldType(i) };
+                    insert.Add(updateItem);
+                }
+            }
+
+            var insertOption = new BatchInsertOption();
+            if (insertOptionAction != null) { insertOptionAction(insertOption); }
+
+            OpenConn();
+
+
+            var sb = new StringBuilder();
+
+            int idx = 0;
+
+            int batchSize = insertOption.ProcessBatch;// 50000;// tidb设置大些试试,测试100万行/25秒
+            int batchCnt = 0;
+
+            bool hasUnDo = false;
+            SetHugeCommandTimeOut();
+
+            int oneThousandCount = 0;
+            while (rdr.Read())
+            {
+                foreach (var i in insert)
+                {
+                    i.Value.Value = rdr[i.Key];
+                }
+                //if (rowAction != null) { rowAction(insert); }
+                if (rowAction != null) {
+                    if (!rowAction(insert))
+                    {
+                        continue;
+                    }
+                }
+
+                //if (oneThousandCount > 999)//sqlserver里values最多1000行,但tidb没有这个限制(但这句留着备用)(注释这句的话,可以从19秒减少到14秒完成)
+                //{
+                //    oneThousandCount = 0;
+                //    sb.AppendFormat(@"; insert into {0}({1}) values({2})", tableName, insert.ToKeysSql(), insert.ToValuesSql());
+                //}
+                //else
+                if (oneThousandCount == 0)
+                {
+                    sb.AppendFormat(@" insert into {0}({1}) values({2})", tableName, insert.ToKeysSql(), insert.ToValuesSql());
+                }
+                else
+                {
+                    sb.AppendFormat(@",({0})", insert.ToValuesSql());
+                }
+
+                hasUnDo = true;
+                if (batchCnt > batchSize)
+                {
+                    //var b = ExecuteSql(sb.ToString(), false);
+                    var b = ExecuteSql(sb.ToString(), false);
+                    if ((!b)&& stopIfError)
+                    {
+                        rdr.Close();
+                        CloseConn();
+                        return false;
+                    }
+                    if (sqlRowsCopiedAction != null)
+                    {
+                        sqlRowsCopiedAction(idx);
+                    }
+                    sb.Clear();
+
+                    hasUnDo = false;
+                    batchCnt = 0;
+                    oneThousandCount = 0;
+                }
+                else
+                {
+                    batchCnt++;
+                    oneThousandCount++;
+                }
+                idx++;
+            }
+
+            if (hasUnDo)
+            {
+                var b = ExecuteSql(sb.ToString(), false);
+                if ((!b)&& stopIfError)
+                {
+                    rdr.Close();
+                    CloseConn();
+                    return false;
+                }
+            }
+            rdr.Close();
+            CloseConn();
+
+            return true;
+        }
+        public bool HugeInsertList<T>(SqlInsertCollection insert,
+            IList<T> list, string tableName,
+            Action<BatchInsertOption> insertOptionAction = null,
+            Action<SqlInsertCollection,T> rowAction = null,
+            Action<int> sqlRowsCopiedAction = null)
+        {
+            if (list == null || list.Count < 1) { return false; }
+            bool autoUpdateByModel = false;//如果用户没提供insert,那说明字段是根据list生成的,可以自动更新
+            if (insert == null)
+            {
+                insert = new MySqlInsertCollection(list[0]);
+                autoUpdateByModel = true;
+            }
+
+            var insertOption = new BatchInsertOption();
+            if (insertOptionAction != null) { insertOptionAction(insertOption); }
+
+            OpenConn();
+
+
+            var sb = new StringBuilder();
+
+            int idx = 0;
+
+            int batchSize = insertOption.ProcessBatch;// 50000;// tidb设置大些试试,测试100万行/25秒
+            int batchCnt = 0;
+
+            bool hasUnDo = false;
+            SetHugeCommandTimeOut();
+
+            int oneThousandCount = 0;
+            foreach (var i in list)
+            {
+                if (autoUpdateByModel)
+                {
+                    insert.UpdateModelValue(i);
+                }
+                //foreach (var i in insert)
+                //{
+                //    i.Value.Value = rdr[i.Key];
+                //}
+                if (rowAction != null) { rowAction(insert,i); }
+
+                //if (oneThousandCount > 999)//sqlserver里values最多1000行,但tidb没有这个限制(但这句留着备用)(注释这句的话,可以从19秒减少到14秒完成)
+                //{
+                //    oneThousandCount = 0;
+                //    sb.AppendFormat(@"; insert into {0}({1}) values({2})", tableName, insert.ToKeysSql(), insert.ToValuesSql());
+                //}
+                //else
+                if (oneThousandCount == 0)
+                {
+                    sb.AppendFormat(@" insert into {0}({1}) values({2})", tableName, insert.ToKeysSql(), insert.ToValuesSql());
+                }
+                else
+                {
+                    sb.AppendFormat(@",({0})", insert.ToValuesSql());
+                }
+
+                hasUnDo = true;
+                if (batchCnt > batchSize)
+                {
+                    //var b = ExecuteSql(sb.ToString(), false);
+                    var b = ExecuteSql(sb.ToString(), false);
+                    if (!b)
+                    {
+                        //rdr.Close();
+                        CloseConn();
+                        return false;
+                    }
+                    if (sqlRowsCopiedAction != null)
+                    {
+                        sqlRowsCopiedAction(idx);
+                    }
+                    sb.Clear();
+
+                    hasUnDo = false;
+                    batchCnt = 0;
+                    oneThousandCount = 0;
+                }
+                else
+                {
+                    batchCnt++;
+                    oneThousandCount++;
+                }
+                idx++;
+            }
+
+            if (hasUnDo)
+            {
+                var b = ExecuteSql(sb.ToString(), false);
+                if (!b)
+                {
+                    //rdr.Close();
+                    CloseConn();
+                    return false;
+                }
+            }
+            //rdr.Close();
+            CloseConn();
+
+            return true;
+        }
+
+
+        public bool BatchUpdate( MySqlUpdateCollection update, DbDataReader rdr, string tableName,
+            Action<BatchInsertOption> insertOptionAction ,
+            //Func<MySqlUpdateCollection, DbDataReader,bool> rowAction,
+            Func<BaseSqlUpdateCollection, DbDataReader, bool> rowAction,
+            Action<int> sqlRowsUpdatedAction = null)
+        {
+
+            var insertOption = new BatchInsertOption();
+            if (insertOptionAction != null) { insertOptionAction(insertOption); }
+
+            //int batch = 1000;
+            //int cur = 0;
+            int already = 0;
+            //string sql = "";
+            var sb = new StringBuilder();
+            int idx = 0;
+            int batchSize = insertOption.ProcessBatch;// 50000;// tidb设置大些试试,测试100万行/25秒
+            int batchCnt = 0;
+            bool hasUnDo = false;
+            while (rdr.Read())
+            {
+                //////var item = rdrAction(rdr);
+                //////if (item == null) { continue; }
+                //////update.UpdateModelValue(item);
+
+                ////if (rowAction != null) { rowAction(update,rdr); }
+                //foreach (var i in update)
+                //{
+                //    i.Value.Value = rdr[i.Key];
+                //}
+                if (insertOption.AutoUpdateModel)
+                {
+                    update.UpdateByDataReader(rdr);
+                }
+                if (rowAction!=null)
+                {
+                    if (!rowAction(update, rdr))
+                    {
+                        continue;
+                    }
+                }
+
+                sb.AppendFormat(@" update {0} set {1} {2};
+                ", tableName, update.ToSetSql(), update.ToWhereSql());
+                //sql += string.Format(@" update {0} set {1} {2};
+                //", tableName, update.ToSetSql(), update.ToWhereSql());
+
+                //cur++;
+                hasUnDo = true;
+                if (batchCnt > batchSize)
+                {
+                    //continue;//benjamin 
+                    //if (!ExecuteTransactSql(sql))
+                    if (!ExecuteSql(sb.ToString()))
+                    {
+                        return false;
+                    }
+                    //already += batch;
+                    if (sqlRowsUpdatedAction != null) { sqlRowsUpdatedAction(idx); }
+                    batchCnt = 0;
+                    //batchList.Clear();
+                    //sql = "";
+                    sb.Clear();
+                    hasUnDo = false;
+                    //batchList = new List<DayOrdersUpdate>();
+                }else
+                {
+                    batchCnt++;
+                }
+                idx++;
+            }
+            rdr.Close();
+            CloseConn();
+            if (hasUnDo)
+            {
+                //return false;//benjamin 
+                //if (!ExecuteTransactSql(sql))
+                if (!ExecuteSql(sb.ToString()))
+                {
+                    return false;
+                }
+            }
+
+            return true;//benjamin 
+        }
+
         /// <summary>
         /// 批量导入(考虑版本号)(陈超)(tidb使用报错:不支持此命令)
         /// </summary>
@@ -501,10 +823,19 @@ namespace Perfect
                 return count;
             //}
         }
+        public bool CloseReader(DbDataReader reader)
+        {
+            sqlCmd.Cancel();//如果没有这句,数据很多时 dr.Close 会很慢 https://www.cnblogs.com/xyz0835/p/3379676.html
+            reader.Close();
+            return true;
+        }
+
         public class BatchInsertOption
         {
             private int _processBatch = 500;
             public int ProcessBatch { get { return _processBatch; } set { _processBatch = value; } }
+            private bool _autoUpdateModel = true;
+            public bool AutoUpdateModel { get { return _autoUpdateModel; } set { _autoUpdateModel = value; } }
         }
     }
 }

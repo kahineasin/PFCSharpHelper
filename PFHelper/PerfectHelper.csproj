@@ -135,6 +135,7 @@
     <Content Include="Content\layer\theme\default\loading-2.gif" />
     <Content Include="Content\layer\生活网用的弹窗_挺好用.txt" />
     <Content Include="Content\ChinaProvinceMap.txt" />
+    <Content Include="Content\pfCoordinatesOfChineseCity.txt" />
     <Content Include="Content\PFGrid\img\treeview-default-line.gif" />
     <Content Include="Content\PFGrid\img\treeview-default.gif" />
     <Content Include="Content\PFGrid\img\treeview-red-line.gif" />

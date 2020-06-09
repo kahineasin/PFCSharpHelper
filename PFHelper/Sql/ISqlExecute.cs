@@ -11,11 +11,15 @@ namespace Perfect
     public interface ISqlExecute//<TSqlDataReader>
                                 //where TSqlDataReader:DbDataReader
     {
+        void SetHugeCommandTimeOut();
         void OpenConn();
         void CloseConn();
         //void SetHugeCommandTimeOut();
         //DataTable GetQueryTable(string sqlval);
 
         ////TSqlDataReader GetDataReader2(string sqlstr);
+        bool CloseReader(DbDataReader reader);
+
+        DbDataReader GetDataReader3(string sqlstr);
     }
 }

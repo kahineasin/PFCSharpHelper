@@ -1048,6 +1048,123 @@ select count(*) from #dsellerno1
         //{
         //    var area=new FeatureCollection()
         //}
+        [TestMethod]
+        public void TestIDCardToBirthDay()
+        {
+            object[][] idcards = new object[][] {
+                new object[] { "43022319351230151X",1935,84 },
+                new object[] { "330327199207200960", 1992, 27 },
+                new object[] { "4415227604082731", null, null }
+            };
+            foreach(var i in idcards)
+            {
+                var birthday = PFDataHelper.IDCardToBirthDay(i[0].ToString());
+                Assert.IsTrue((i[1]==null&& birthday==null)||birthday.Value.Year == PFDataHelper.ObjectToInt(i[1]));
+                var age = PFDataHelper.GetAge(birthday);
+                Assert.IsTrue((i[2] == null && age == null) || age == PFDataHelper.ObjectToInt(i[2]));
+            }
+            //var birthday = PFDataHelper.IDCardToBirthDay("43022319351230151X");
+            //Assert.IsTrue(birthday.Value.Year ==1935);
+            //var age = PFDataHelper.GetAge(birthday);
+            //Assert.IsTrue(age == 84);
+
+            //birthday = PFDataHelper.IDCardToBirthDay("330327199207200960");
+            //Assert.IsTrue(birthday.Value.Year == 1992);
+            //age = PFDataHelper.GetAge(birthday);
+            //Assert.IsTrue(age == 27);
+        }
+
+        [TestMethod]
+        public void TestCreateChineseCityTable()
+        { 
+
+            SqlCreateTableCollection models = new SqlCreateTableCollection
+            {
+                TableName = "chinese_city",
+                PrimaryKey = new string[] { "province", "city" },
+                TableIndex = null
+            };
+            models.Add(new SqlCreateTableItem
+            {
+                FieldName = "province",
+                FieldType = typeof(string)
+            });
+            models.Add(new SqlCreateTableItem
+            {
+                FieldName = "city",
+                FieldType = typeof(string)
+            });
+            models.Add(new SqlCreateTableItem
+            {
+                FieldName = "latitude",
+                FieldType = typeof(decimal),
+                FieldSqlLength = 12,
+                Precision = 8
+            });
+            models.Add(new SqlCreateTableItem
+            {
+                FieldName = "longitude",
+                FieldType = typeof(decimal),
+                FieldSqlLength=12,
+                Precision=8
+            });
+
+            string ms = null;
+            var sqlExec = new MySqlExecute("Database=sale;Data Source=172.16.1.246;User Id=root;Password=perfectTIDB;pooling=false;CharSet=utf8;port=10010;ConnectionTimeout=90000;AllowZeroDateTime=true;ConvertZeroDateTime=true;Protocol=tcp");
+            var b = sqlExec.CreateTable(models, out ms);
+        }
+        /// <summary>
+        /// 导入中国省市坐标
+        /// </summary>
+        [TestMethod]
+        public void TestImportChineseCity()
+        {
+            var listStr = PFDataHelper.ReadLocalTxtLines("E:\\svn\\SaveDbReport\\PFHelper\\PFHelper\\Content\\pfCoordinatesOfChineseCity.txt");
+            var list = new List<PFChineseCity>();
+            foreach(var i in listStr)
+            {
+                var strSplit = i.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (strSplit.Length < 3) { continue; }
+                var citySplit = strSplit[2].Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+                if (citySplit.Length < 2) { continue; }
+                var coordinateSplit = strSplit[1].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                if (coordinateSplit.Length < 2) { continue; }
+
+                var item = new PFChineseCity();
+                item.Province = citySplit[0];
+                item.City = citySplit[1];
+                item.Latitude =PFDataHelper.ObjectToDecimal( coordinateSplit[1])??0;
+                item.Longitude = PFDataHelper.ObjectToDecimal(coordinateSplit[0]) ?? 0;
+                list.Add(item);
+            }
+            var sqlExec = new MySqlExecute("Database=sale;Data Source=172.16.1.246;User Id=root;Password=perfectTIDB;pooling=false;CharSet=utf8;port=10010;ConnectionTimeout=90000;AllowZeroDateTime=true;ConvertZeroDateTime=true;Protocol=tcp");
+
+            MySqlInsertCollection insert = new MySqlInsertCollection()
+            {
+                { "province" ,""},
+                { "city" ,""},
+                { "latitude" ,""},
+                { "longitude" ,""},
+            };
+            //SqlInsertCollection insert = new SqlInsertCollection(list[0], "province", "city", "latitude", "longitude");
+            var b = sqlExec.HugeInsertList(
+               insert,
+                list,
+                "chinese_city",
+                a => a.ProcessBatch = 50000,
+               (a,i)=> {
+                   a["province"].Value = i.Province;
+                   a["city"].Value = i.City;
+                   a["latitude"].Value = i.Latitude;
+                   a["longitude"].Value = i.Longitude;
+               },
+                (already) => {
+                    //total = already;
+                    //loadingfrm.SetJD("当前：正在导入reader", "当前进度：(" + PFDataHelper.ScientificNotation(already) + "/未知)");
+                }
+                );
+            Assert.IsTrue(b);
+        }
         #region Private
         /// <summary>
         /// 获得各种类型封装的object,便于测试 ObjectTo...()方法

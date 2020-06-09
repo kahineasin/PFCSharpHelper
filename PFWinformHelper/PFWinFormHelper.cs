@@ -39,6 +39,16 @@ namespace Perfect
             textBox.ForeColor = color;
         }
         /// <summary>
+        /// 设置下拉数据源（winfrom的comboBox好像没有keyValue的用法
+        /// </summary>
+        /// <param name="comboBox"></param>
+        /// <param name="data"></param>
+        public static void SetComboBoxListData(this ComboBox comboBox, Enum data)
+        {
+            var list = PFDataHelper.EnumToKVList(data);
+            comboBox.DataSource= list.Select(a=>a.Value).ToList();
+        }
+        /// <summary>
         /// 写信息到TextArea第一行
         /// </summary>
         /// <param name="tb"></param>

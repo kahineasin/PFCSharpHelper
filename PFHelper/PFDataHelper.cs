@@ -1027,15 +1027,18 @@ namespace Perfect
             }
             return null;
         }
-        public static DateTime? IDCardToDateTime(object value)
+        public static DateTime? IDCardToBirthDay(object value)
         {
             if (value == null || value == DBNull.Value) { return null; }
             DateTime r;
             var sv = value.ToString();
             if (sv.Length < 14) { return null; }
             sv = sv.Substring(6, 8);
+            sv = sv.Insert(6, "-");
+            sv = sv.Insert(4, "-");
             if (DateTime.TryParse(sv, out r))
             {
+                if(r > DateTime.Now) { return null; }
                 return r;
             }
             return null;
@@ -5551,20 +5554,23 @@ string.Join("\r\n", errors.ToArray())
         public string Charset { get { return _charset; } set { _charset = value; } }
         public virtual string FieldQuotationCharacterL { get { return "`"; } }//[
         public virtual string FieldQuotationCharacterR { get { return "`"; } }//]
+        public string[] PrimaryKey { get; set; }
+        public string[] TableIndex { get; set; }
         public string ToSql()
         {
-            #region tidb上报语法错误
+            #region tidb上测试通过
 
             var result = string.Format(@"
             CREATE TABLE `{0}` (
               {1}
-            )
+               {2}
+            );
 
             ",
 TableName,
 string.Join(",", this.Select(
     a =>
-        string.Format("{0}{1}{2} {3} DEFAULT NULL",
+        string.Format("{0}{1}{2} {3} ",
             FieldQuotationCharacterL,
             a.FieldName,
             FieldQuotationCharacterR,
@@ -5572,8 +5578,17 @@ string.Join(",", this.Select(
         )
     ).ToArray()
 ),
- Charset
+    PrimaryKey != null && PrimaryKey.Any() ? string.Format(",PRIMARY KEY({0})", string.Join(",", PrimaryKey)) : ""
 );
+            if (TableIndex != null && TableIndex.Any())
+            {
+                foreach (var i in TableIndex)
+                {
+                    result += string.Format(@"
+CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
+", TableName, FieldQuotationCharacterL, i, FieldQuotationCharacterR);
+                }
+            }
             #endregion
 
             //            //tidb语法https://blog.csdn.net/u011782423/article/details/81082419
@@ -5596,26 +5611,32 @@ string.Join(",", this.Select(
             //);
             return result;
         }
-        public static string GetFieldTypeString(PFModelConfig m) {
+        public string GetFieldTypeString(PFModelConfig m) {
+            string r = "";
             if (m.FieldType == typeof(int))
             {
-                return string.Format("int");//int(11) ?后面不知道要不要长度
-            }else if(m.FieldType==typeof(string))
+                r = string.Format("int");//int(11) ?后面不知道要不要长度
+            } else if (m.FieldType == typeof(string))
             {
-                return string.Format("varchar({0})",m.FieldSqlLength??100);//int(11) ?后面不知道要不要长度
+                r = string.Format("varchar({0})", m.FieldSqlLength ?? 100);//int(11) ?后面不知道要不要长度
             }
             else if (m.FieldType == typeof(decimal))
             {
-                return string.Format("decimal({0},{1})", m.FieldSqlLength??18,m.Precision??2);
+                r = string.Format("decimal({0},{1})", m.FieldSqlLength ?? 18, m.Precision ?? 2);
             }
             else if (m.FieldType == typeof(DateTime))
             {
-                return "datetime";
+                r = "datetime";
             }
             else
             {
-                return "varchar(100)";
+                r = "varchar(100)";
             }
+            if (PrimaryKey != null && PrimaryKey.Contains(m.FieldName))
+            {
+                r += " not null";
+            }
+            return r;
         }
 
     }
@@ -5893,14 +5914,18 @@ where rownumber between {1} and {2}
     public abstract class BaseSqlUpdateCollection : Dictionary<string, SqlUpdateItem>// List<KeyValuePair<string, object>>
     {
         private object _model = null;
-        private string _fieldQuotationCharacterL = "[";
-        private string _fieldQuotationCharacterR = "]";
-        /// <summary>
-        /// 字段引用字符:SqlServer中为[]  MySql中为`
-        /// </summary>
-        public string FieldQuotationCharacterL { get { return _fieldQuotationCharacterL; } set { _fieldQuotationCharacterL = value; } }
-        public string FieldQuotationCharacterR { get { return _fieldQuotationCharacterR; } set { _fieldQuotationCharacterR = value; } }
-        //private Dictionary<string, PropertyInfo> _modelProperties = null;
+
+        public virtual string FieldQuotationCharacterL { get { return "["; } }
+        public virtual string FieldQuotationCharacterR { get { return "]"; } }
+
+        //private string _fieldQuotationCharacterL = "[";
+        //private string _fieldQuotationCharacterR = "]";
+        ///// <summary>
+        ///// 字段引用字符:SqlServer中为[]  MySql中为`
+        ///// </summary>
+        //public string FieldQuotationCharacterL { get { return _fieldQuotationCharacterL; } set { _fieldQuotationCharacterL = value; } }
+        //public string FieldQuotationCharacterR { get { return _fieldQuotationCharacterR; } set { _fieldQuotationCharacterR = value; } }
+        ////private Dictionary<string, PropertyInfo> _modelProperties = null;
         public new SqlUpdateItem this[string name]
         {
             get
@@ -5952,6 +5977,7 @@ where rownumber between {1} and {2}
         /// <summary>		
         /// 批量更新时为了减少应用反射的次数,只更新value		
         /// 执行5120次共花费11毫秒,重新构造整个对象的花费是此方法的2倍		
+        /// 注意使用此方法的前提是:初始化时提供了model
         /// </summary>		
         public virtual void UpdateModelValue(object model)
         {
@@ -5974,7 +6000,7 @@ where rownumber between {1} and {2}
                 )
             {
                 if (vtype == typeof(decimal) || vtype == typeof(decimal?) || vtype == typeof(int) || vtype == typeof(int?) || vtype == typeof(DateTime) || vtype == typeof(DateTime?) || vtype == typeof(bool) || vtype == typeof(bool?)
-                    || vtype == typeof(double) || vtype == typeof(double?)
+                    || vtype == typeof(double) || vtype == typeof(double?)||vtype==typeof(System.Type)
                     )
                 {
                     return " null ";
@@ -6005,6 +6031,7 @@ where rownumber between {1} and {2}
             return string.Format(" '{0}' ", val);
         }
     }
+
     /// <summary>
     /// 生成sql的update语句的(手动指定PrimaryKeyFields可以防止漏了写where导致更新了所有数据)
     /// 
@@ -6014,11 +6041,15 @@ where rownumber between {1} and {2}
     ///    "lrman", "lrdate", "moneyflag", "agentno")
     ///    .PrimaryKeyFields("id");
     /// </summary>
-    public class SqlUpdateCollection : BaseSqlUpdateCollection//<SqlUpdateCollection>
+    public abstract class SqlUpdateCollection<TWhereCollection> : BaseSqlUpdateCollection//<SqlUpdateCollection>
+        where TWhereCollection:SqlWhereCollection,new()
     {
         protected IList<string> _updateFields;
+        //protected IList<string> _keyFields;
 
-        private SqlWhereCollection _where;
+        private TWhereCollection _where;
+        //public TWhereCollection Where { get { return _where; } }
+        public Dictionary<string, SqlWhereItem> PrimaryFields { get; set; }
         public SqlUpdateCollection()
             : base()
         {
@@ -6034,7 +6065,7 @@ where rownumber between {1} and {2}
         /// </summary>
         /// <param name="names"></param>
         /// <returns></returns>
-        public SqlUpdateCollection UpdateFields(params string[] names)
+        public virtual SqlUpdateCollection<TWhereCollection> UpdateFields(params string[] names)
         {
             _updateFields = names;
             return this;
@@ -6044,15 +6075,38 @@ where rownumber between {1} and {2}
         /// </summary>
         /// <param name="names"></param>
         /// <returns></returns>
-        public SqlUpdateCollection PrimaryKeyFields(params string[] names)
+        public virtual SqlUpdateCollection<TWhereCollection> PrimaryKeyFields(params string[] names)
         {
-            _where = new SqlWhereCollection { };
+            return PrimaryKeyFields(true, names);
+            //_where = new SqlWhereCollection { };
+            //foreach (var i in names)
+            //{
+            //    var v = this[i].Value;
+            //    if (PFDataHelper.StringIsNullOrWhiteSpace((v ?? "").ToString())) { throw new Exception("更新时where条件不能为空!"); }
+            //    //_where.Add(i, this[i].Value);//这样不保险，因为names有可能是大写的，但this[i].Key有可能是小写的
+            //    _where.Add(this[i].Key, this[i].Value);
+            //}
+            ////_primaryKeyFields = names;
+            //if (_updateFields == null)//一般来讲,除去主键之外的字段都应该要更新
+            //{
+            //    _updateFields = this.Select(a => a.Key).Where(a => !names.Contains(a)).ToList();
+            //}
+            //return this;
+        }
+        public SqlUpdateCollection<TWhereCollection> PrimaryKeyFields(bool checkWhereNotNull,params string[] names)
+        {
+            //_keyFields = new List<string>();
+            _where = new TWhereCollection { };
+            PrimaryFields = new Dictionary<string, SqlWhereItem>();
             foreach (var i in names)
             {
                 var v = this[i].Value;
-                if (PFDataHelper.StringIsNullOrWhiteSpace((v ?? "").ToString())) { throw new Exception("更新时where条件不能为空!"); }
-                //_where.Add(i, this[i].Value);//这样不保险，因为names有可能是大写的，但this[i].Key有可能是小写的
-                _where.Add(this[i].Key, this[i].Value);
+                if (checkWhereNotNull&&PFDataHelper.StringIsNullOrWhiteSpace((v ?? "").ToString())) { throw new Exception("更新时where条件不能为空!"); }
+                ////_where.Add(i, this[i].Value);//这样不保险，因为names有可能是大写的，但this[i].Key有可能是小写的
+                //_where.Add(this[i].Key, this[i].Value);
+                var whereItem = new SqlWhereItem(this[i].Key, this[i].Value);
+                _where.Add(whereItem);
+                PrimaryFields.Add(this[i].Key, whereItem);
             }
             //_primaryKeyFields = names;
             if (_updateFields == null)//一般来讲,除去主键之外的字段都应该要更新
@@ -6060,6 +6114,55 @@ where rownumber between {1} and {2}
                 _updateFields = this.Select(a => a.Key).Where(a => !names.Contains(a)).ToList();
             }
             return this;
+        }
+        /// <summary>		
+        /// 批量更新时为了减少应用反射的次数,只更新value		
+        /// 执行5120次共花费11毫秒,重新构造整个对象的花费是此方法的2倍		
+        /// </summary>		
+        public void UpdateByDataReader(IDataReader dr)
+        {
+            foreach (var i in this)
+            {
+                //i.Value.Value = i.Value.PInfo.GetValue(model, null);
+                if (!_where.Any(a => a.Key == i.Key))
+                {
+                    i.Value.Value = dr[i.Key];
+                }
+            }
+            foreach (var i in _where)
+            {
+                i.Value = dr[i.Key];
+            }
+        }
+
+        //public void UpdateByDict(Dictionary<string, object> model)
+        //{
+        //    foreach (var i in this)
+        //    {
+        //        if (model.ContainsKey(i.Key))
+        //        {
+        //            i.Value.Value = model[i.Key];
+        //        }
+        //    }
+        //    foreach (var i in _where)
+        //    {
+        //        if (model.ContainsKey(i.Key))
+        //        {
+        //            i.Value = model[i.Key];
+        //        }
+        //    }
+        //}
+
+        public void Set(string key,object value)
+        {
+            if (PrimaryFields.ContainsKey(key))
+            {
+                _where.First(a => a.Key == key).Value = value;
+            }
+            if (this.ContainsKey(key))
+            {
+                this[key].Value = value;
+            }
         }
         /// <summary>
         /// 格式如:name1='value1',name2='value2',name3=time3,...
@@ -6072,7 +6175,9 @@ where rownumber between {1} and {2}
             foreach (var i in _updateFields)
             {
                 if (count != 0) { s1 += ","; }
-                s1 += ("[" + i + "]" + "=");
+                //s1 += ("[" + i + "]" + "=");
+                s1 +=string.Format("{0}{1}{2}=", FieldQuotationCharacterL,i, FieldQuotationCharacterR);
+                
                 s1 += GetFormatValue(this[i].Value, this[i].VType);
                 count++;
             }
@@ -6095,7 +6200,49 @@ where rownumber between {1} and {2}
                 i.Value = this[i.Key].PInfo.GetValue(model, null);
             }
         }
+    }
 
+    public  class SqlUpdateCollection : SqlUpdateCollection<SqlWhereCollection>
+    {
+        public SqlUpdateCollection() : base() { }
+        public SqlUpdateCollection(object model, params string[] names
+            )
+            : base(model, names
+                  )
+        {
+        }
+        public new SqlUpdateCollection UpdateFields(params string[] names)
+        {
+            base.UpdateFields(names);
+            return this;
+        }
+        /// <summary>
+        /// 主键字段(用于生成where语句)
+        /// </summary>
+        /// <param name="names"></param>
+        /// <returns></returns>
+        public new SqlUpdateCollection PrimaryKeyFields(params string[] names)
+        {
+            base.PrimaryKeyFields(names);
+            return this;
+        }
+    }
+    public class MySqlUpdateCollection : SqlUpdateCollection<MySqlWhereCollection>
+    {
+        public override string FieldQuotationCharacterL
+        {
+            get
+            {
+                return "`";
+            }
+        }
+        public override string FieldQuotationCharacterR
+        {
+            get
+            {
+                return "`";
+            }
+        }
     }
     /// <summary>
     /// 生成sql的insert语句的(注意,与updateCollection不同的是,insertCollection在初始化时已经决定了生成sql的字段)
@@ -6149,6 +6296,33 @@ where rownumber between {1} and {2}
             }
             s2 += "";
             return s2;
+        }
+    }
+    public class MySqlInsertCollection : SqlInsertCollection
+    {
+        public override string FieldQuotationCharacterL
+        {
+            get
+            {
+                return "`";
+            }
+        }
+        public override string FieldQuotationCharacterR
+        {
+            get
+            {
+                return "`";
+            }
+        }
+        public MySqlInsertCollection()
+            : base()
+        {
+        }
+        public MySqlInsertCollection(object model, params string[] names
+            )
+            : base(model, names
+                  )
+        {
         }
     }
     #endregion SqlHelper
@@ -9554,6 +9728,7 @@ Date:{1}
         private string _dstConnName = "dayConnection";
         //public string SrcConn { get; set; }
         public string SrcConnName { get; set; }
+        public PFSqlType? SrcSqlType{ get; set; }
         //public string DstConn { get { return _dstConnName; } set { _dstConnName = value; } }
         /// <summary>
         /// 原来都是33.balance(DaySqlExec),现在多了华姐的
@@ -9565,7 +9740,8 @@ Date:{1}
         //public string DstTableName { get { return DstTable.HasValue ? DstTable.ToString() : null; } }
         public string DstTableName { get; set; }
         public string ProcedureName { get; set; }
-        public Action<SqlInsertCollection> BeforeInsertAction { get; set; }
+        //public Action<SqlInsertCollection> BeforeInsertAction { get; set; }
+        public Action<BaseSqlUpdateCollection> BeforeInsertAction { get; set; }
         public Action<DataRow> BeforeBulkAction { get; set; }
         /// <summary>
         /// 转移数据之后(执行存储过程之前)的操作(如转Json,根据增量表更新主表等)
@@ -9616,5 +9792,24 @@ Date:{1}
         /// 有对应的增量表
         /// </summary>
         public bool HasTableChange { get; set; }
+    }
+
+    public enum PFSqlType
+    {
+        SqlServer, MySql
+    }
+
+    public class PFChineseCity
+    {
+        public string Province { get; set; }
+        public string City { get; set; }
+        /// <summary>
+        /// 纬
+        /// </summary>
+        public decimal Latitude { get; set; }
+        /// <summary>
+        /// 经
+        /// </summary>
+        public decimal Longitude { get; set; }
     }
 }
