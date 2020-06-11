@@ -4,3 +4,7 @@
         static void Main()
         {
             PFDataHelper.SetConfigMapper(new PFConfigMapper());
+
+
+git:
+git push --set-upstream https://github.com/kahineasin/PFCSharpHelper.git master

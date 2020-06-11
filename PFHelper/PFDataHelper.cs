@@ -130,6 +130,7 @@ namespace Perfect
         /// 月份格式
         /// </summary>
         public static string MonthFormat = "yyyy.MM";
+        public static string YMFormat = "yyyyMM";
 
         /// <summary>
         /// 系统最大月份(对于数据庞大的系统,有起始数据月份是合理的)
@@ -331,6 +332,10 @@ namespace Perfect
         public static string DateToCMonth(DateTime cmonth)
         {
             return cmonth.ToString(MonthFormat);
+        }
+        public static string DateToYM(DateTime cmonthDate)
+        {
+            return cmonthDate.ToString(YMFormat);
         }
         /// <summary>
         /// 最近一年的cmonth列表
@@ -1038,7 +1043,7 @@ namespace Perfect
             sv = sv.Insert(4, "-");
             if (DateTime.TryParse(sv, out r))
             {
-                if(r > DateTime.Now) { return null; }
+                if (r > DateTime.Now) { return null; }
                 return r;
             }
             return null;
@@ -1088,6 +1093,17 @@ namespace Perfect
                 var sb = (SByte)value;
                 if (sb == 1) { return true; }
                 if (sb == 0) { return false; }
+                return null;
+            }
+            else if (srcType == typeof(int) && (dstType == typeof(bool?) || dstType == typeof(bool))//mysql中读出来的bool类型是SBype的
+            )
+            {
+                if (value != null)
+                {
+                    var sb = value.ToString();
+                    if (sb == "1") { return true; }
+                    if (sb == "0") { return false; }
+                }
                 return null;
             }
             else if (srcType == typeof(decimal) && (dstType == typeof(Int64?) || dstType == typeof(Int64))//mysql中读出来的bigint类型是decimal的?如us_user.id列--benjamin20190730
@@ -1701,6 +1717,10 @@ namespace Perfect
         public static DataTable SetColumnHasSummary(this DataTable dt, string columnName)
         {
             return SetColumnProperty(dt, columnName, "hasSummary", true);
+        }
+        public static DataTable SetColumnSummaryType(this DataTable dt, string columnName, SummaryType summaryType)
+        {
+            return SetColumnProperty(dt, columnName, "summaryType", summaryType.ToString());
         }
         //public static DataTable SetColumnCompute(this DataTable dt, string columnName, string expression)
         //{
@@ -4518,9 +4538,6 @@ namespace Perfect
                             }
                             else if (dataColumn.ExtendedProperties.Contains("hasSummary") && bool.Parse(dataColumn.ExtendedProperties["hasSummary"].ToString()) == true)
                             {
-                                //dictionary.summary = PFDataHelper.Thousandth(CommonFun.ColumnTotal(all, dictionary.data));//dictionary.data已替换了特殊字符，不准确
-                                //dictionary.summary = PFDataHelper.Thousandth(CommonFun.ColumnTotal(all, dataColumn.ColumnName));
-                                //dictionary.summary = PFDataHelper.ColumnTotal(all, dataColumn.ColumnName);
                                 dictionary.summary = GetColumnSummary(all, dataColumn.ColumnName, dictionary.summaryType);
                             }
                         }
@@ -5250,7 +5267,11 @@ string.Join("\r\n", errors.ToArray())
             StartDate = startDate;
             EndDate = endDate;
         }
-        public IEnumerable<DateTime> GetPerMonthStart()
+        /// <summary>
+        /// 旧版本有问题,当传入2014.01~2014.02时,仅会返回2014.01,但传入2014.01~2014.01时,也是返回2014.01.这样是有矛盾的
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<DateTime> GetPerMonthStartOld()
         {
             var currentDate = StartDate;
             do
@@ -5258,6 +5279,22 @@ string.Join("\r\n", errors.ToArray())
                 yield return currentDate.GetMonthStart();
                 currentDate = currentDate.AddMonths(1);
             } while (currentDate < EndDate);
+        }
+        public IEnumerable<DateTime> GetPerMonthStart()
+        {
+            var currentDate = StartDate;
+            while (currentDate <= EndDate)
+            {
+                yield return currentDate.GetMonthStart();
+                currentDate = currentDate.AddMonths(1);
+            }
+            #region 这样有问题,当传入2014.01~2014.02时,人会返回2014.01
+            //do
+            //{
+            //    yield return currentDate.GetMonthStart();
+            //    currentDate = currentDate.AddMonths(1);
+            //} while (currentDate < EndDate); 
+            #endregion
         }
         public IEnumerable<DateTime> GetPerDayStart()
         {
@@ -5544,7 +5581,8 @@ string.Join("\r\n", errors.ToArray())
 
 
     #region SqlHelper
-    public class SqlCreateTableItem : PFModelConfig {
+    public class SqlCreateTableItem : PFModelConfig
+    {
 
     }
     public class SqlCreateTableCollection : List<SqlCreateTableItem>// Dictionary<string, PFModelConfig>
@@ -5611,12 +5649,14 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
             //);
             return result;
         }
-        public string GetFieldTypeString(PFModelConfig m) {
+        public string GetFieldTypeString(PFModelConfig m)
+        {
             string r = "";
             if (m.FieldType == typeof(int))
             {
                 r = string.Format("int");//int(11) ?后面不知道要不要长度
-            } else if (m.FieldType == typeof(string))
+            }
+            else if (m.FieldType == typeof(string))
             {
                 r = string.Format("varchar({0})", m.FieldSqlLength ?? 100);//int(11) ?后面不知道要不要长度
             }
@@ -5650,11 +5690,17 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
         /// 数据库的值小于输入值
         /// </summary>
         Less = 1,
+        /// <summary>
+        /// 数据库的值小于或等于输入值
+        /// </summary>
         LessOrEqual = 2,
         /// <summary>
         /// 数据库的值大于输入值
         /// </summary>
         Greater = 3,
+        /// <summary>
+        /// 数据库的值大于或等于输入值
+        /// </summary>
         GreaterOrEqual = 4,
         Like = 5,
         IN = 6,
@@ -6000,7 +6046,7 @@ where rownumber between {1} and {2}
                 )
             {
                 if (vtype == typeof(decimal) || vtype == typeof(decimal?) || vtype == typeof(int) || vtype == typeof(int?) || vtype == typeof(DateTime) || vtype == typeof(DateTime?) || vtype == typeof(bool) || vtype == typeof(bool?)
-                    || vtype == typeof(double) || vtype == typeof(double?)||vtype==typeof(System.Type)
+                    || vtype == typeof(double) || vtype == typeof(double?) || vtype == typeof(System.Type)
                     )
                 {
                     return " null ";
@@ -6042,7 +6088,7 @@ where rownumber between {1} and {2}
     ///    .PrimaryKeyFields("id");
     /// </summary>
     public abstract class SqlUpdateCollection<TWhereCollection> : BaseSqlUpdateCollection//<SqlUpdateCollection>
-        where TWhereCollection:SqlWhereCollection,new()
+        where TWhereCollection : SqlWhereCollection, new()
     {
         protected IList<string> _updateFields;
         //protected IList<string> _keyFields;
@@ -6093,7 +6139,7 @@ where rownumber between {1} and {2}
             //}
             //return this;
         }
-        public SqlUpdateCollection<TWhereCollection> PrimaryKeyFields(bool checkWhereNotNull,params string[] names)
+        public SqlUpdateCollection<TWhereCollection> PrimaryKeyFields(bool checkWhereNotNull, params string[] names)
         {
             //_keyFields = new List<string>();
             _where = new TWhereCollection { };
@@ -6101,7 +6147,7 @@ where rownumber between {1} and {2}
             foreach (var i in names)
             {
                 var v = this[i].Value;
-                if (checkWhereNotNull&&PFDataHelper.StringIsNullOrWhiteSpace((v ?? "").ToString())) { throw new Exception("更新时where条件不能为空!"); }
+                if (checkWhereNotNull && PFDataHelper.StringIsNullOrWhiteSpace((v ?? "").ToString())) { throw new Exception("更新时where条件不能为空!"); }
                 ////_where.Add(i, this[i].Value);//这样不保险，因为names有可能是大写的，但this[i].Key有可能是小写的
                 //_where.Add(this[i].Key, this[i].Value);
                 var whereItem = new SqlWhereItem(this[i].Key, this[i].Value);
@@ -6153,7 +6199,7 @@ where rownumber between {1} and {2}
         //    }
         //}
 
-        public void Set(string key,object value)
+        public void Set(string key, object value)
         {
             if (PrimaryFields.ContainsKey(key))
             {
@@ -6176,8 +6222,8 @@ where rownumber between {1} and {2}
             {
                 if (count != 0) { s1 += ","; }
                 //s1 += ("[" + i + "]" + "=");
-                s1 +=string.Format("{0}{1}{2}=", FieldQuotationCharacterL,i, FieldQuotationCharacterR);
-                
+                s1 += string.Format("{0}{1}{2}=", FieldQuotationCharacterL, i, FieldQuotationCharacterR);
+
                 s1 += GetFormatValue(this[i].Value, this[i].VType);
                 count++;
             }
@@ -6202,7 +6248,7 @@ where rownumber between {1} and {2}
         }
     }
 
-    public  class SqlUpdateCollection : SqlUpdateCollection<SqlWhereCollection>
+    public class SqlUpdateCollection : SqlUpdateCollection<SqlWhereCollection>
     {
         public SqlUpdateCollection() : base() { }
         public SqlUpdateCollection(object model, params string[] names
@@ -6700,11 +6746,16 @@ where rownumber between {1} and {2}
             : this(c.ColumnName)
         {
             dataType = PFDataHelper.GetStringByType(c.DataType);
+            if (c.ExtendedProperties.Contains("summaryType"))
+            {
+                summaryType = PFDataHelper.ObjectToEnum<SummaryType>(c.ExtendedProperties["summaryType"]) ?? SummaryType.None;
+            }
         }
         public StoreColumn(DataColumn c, PFModelConfig config)
-            : this(c.ColumnName)
+            //: this(c.ColumnName)
+            : this(c)
         {
-            dataType = PFDataHelper.GetStringByType(c.DataType);
+            //dataType = PFDataHelper.GetStringByType(c.DataType);
             SetPropertyByModelConfig(config);
         }
         public StoreColumn(string fieldName, PFModelConfig config)
@@ -9728,7 +9779,7 @@ Date:{1}
         private string _dstConnName = "dayConnection";
         //public string SrcConn { get; set; }
         public string SrcConnName { get; set; }
-        public PFSqlType? SrcSqlType{ get; set; }
+        public PFSqlType? SrcSqlType { get; set; }
         //public string DstConn { get { return _dstConnName; } set { _dstConnName = value; } }
         /// <summary>
         /// 原来都是33.balance(DaySqlExec),现在多了华姐的
