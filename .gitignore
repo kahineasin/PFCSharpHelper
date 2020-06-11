@@ -1,4 +1,8 @@
 ﻿/bin/
+/FieldSetsManager/bin/
+/PackMultiZip/bin/
+/PerfectHelperTest/bin/
+/PerfectHelperTestUI/bin/
 /PFHelper/bin/
 /PFMVCHelper/bin/
 /PFNetHelper/bin/
