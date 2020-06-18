@@ -179,5 +179,97 @@ namespace Perfect
             }
             return list;
         }
+
+        public static List<T> ExcelToList<T>(Worksheet sheet, Dictionary<string, string> columnTextNameDict = null, string keyColumnName = null)
+            where T : new()
+        {
+            //创建一个属性的列表
+            //List<PropertyInfo> prlist = new List<PropertyInfo>();
+            Dictionary<string, PropertyInfo> prDict = new Dictionary<string, PropertyInfo>();
+            //获取TResult的类型实例  反射的入口
+            Type t = typeof(T);
+            //获得TResult 的所有的Public 属性 并找出TResult属性和DataTable的列名称相同的属性(PropertyInfo) 并加入到属性列表 
+            Array.ForEach<PropertyInfo>(t.GetProperties(), p => {
+                if (columnTextNameDict == null || columnTextNameDict.Values.Contains(p.Name))
+                {
+                    prDict.Add(p.Name, p);
+                }
+            });
+            //创建返回的集合
+            List<T> oblist = new List<T>();
+
+            //var list = new List<Dictionary<string, object>>();
+            var cols = new List<string>();
+
+            //if (Request.Files.Count < 1)
+            //{
+            //    return Json(JsonData.SetFault("文件为空"));
+            //}
+            //Workbook wb = new Workbook(Request.Files[0].InputStream);
+            //if (wb == null)
+            //{
+            //    return Json(JsonData.SetFault("excel打开失败"));
+            //}
+            //var sheet = workbook.Worksheets[0];
+            int rowCnt = sheet.Cells.Rows.Count;
+            int colCnt = sheet.Cells.Columns.Count;
+            for (int j = 0; j < colCnt; j++)
+            {
+                cols.Add(PFDataHelper.ObjectToString(sheet.Cells[0, j].Value));
+            }
+            int keyIdx = -1;
+            //var keyColumnText = columnTextNameDict == null ? keyColumnName : columnTextNameDict.First(a => a.Value == keyColumnName).Key;
+            if (keyColumnName != null)
+            {
+                keyIdx = cols.IndexOf(columnTextNameDict == null ? keyColumnName : columnTextNameDict.First(a => a.Value == keyColumnName).Key);
+                if (keyIdx < 0)
+                {
+                    return null;
+                }
+            }
+            for (int i = 1; i < rowCnt; i++)
+            {
+                //var item = new Dictionary<string, object>();
+                if (keyColumnName != null)
+                {
+                    var keyValue = PFDataHelper.ObjectToString(sheet.Cells[i, keyIdx].Value);
+                    if (PFDataHelper.StringIsNullOrWhiteSpace(keyValue))//只要有一行为空，就返回
+                    {
+                        return oblist;
+                    }
+                }
+                var item = new T();
+                for (int j = 0; j < colCnt; j++)
+                {
+                    //item[cols[j]] = sheet.Cells[i, j].Value;
+                    //var sheetHeadRowText = ObjectToString(sheet.Cells[0, j].Value);
+                    var columnText = cols[j];
+                    var columnName = columnTextNameDict == null ? columnText : columnTextNameDict[columnText];
+                    var p = prDict[columnName];
+                    var pt = PFDataHelper.GetPropertyType(p);
+                    var cellValue = sheet.Cells[i, j].Value;
+                    if (pt.IsEnum)
+                    {
+                        p.SetValue(item, Enum.Parse(pt, cellValue.ToString()), null);
+                    }
+                    //else if (pt.IsSubclassOf(typeof(PFCustomStringType)))
+                    //{
+                    //    p.SetValue(ob, row[p.Name].ToString(), null);
+                    //}
+                    else if (cellValue != null)
+                    {
+                        //if (pt == typeof(decimal) && dt.Columns[p.Name].DataType == typeof(int))
+                        //{
+                        //    //由于某些数据库版本不统一的问题会导致,inv表的pv是decimal的，但tc_inv表的pv是int的，于是建model时tc_inv都采用decimal就行了
+                        //}
+
+                        p.SetValue(item, ConvertObjectByType(sheet.Cells[i, j].Value, cellValue.GetType(), p.PropertyType), null);
+
+                    }
+                }
+                oblist.Add(item);
+            }
+            return oblist;
+        }
     }
 }

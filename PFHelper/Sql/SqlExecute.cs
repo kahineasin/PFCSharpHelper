@@ -1078,11 +1078,12 @@ TRUNCATE TABLE {0};
         /// <param name="sqlRowsCopiedAction"></param>
         /// <returns></returns>
         public virtual Task<bool> BulkReaderAsync(DbDataReader dr, string tableName
-            , Action<int> sqlRowsCopiedAction = null,bool? keepIdentityNullable=null,int? batchNullable=null )
+            , Action<int> sqlRowsCopiedAction = null, bool? keepIdentityNullable = null, int? batchNullable = null)
         {
-            Task<bool> rTask = new Task<bool>(() => {
-                bool keepIdentity = keepIdentityNullable?? false;
-                int batch = batchNullable?? 10000;
+            Task<bool> rTask = new Task<bool>(() =>
+            {
+                bool keepIdentity = keepIdentityNullable ?? false;
+                int batch = batchNullable ?? 10000;
 
                 var b = false;
                 if (dr == null)
@@ -1101,7 +1102,7 @@ TRUNCATE TABLE {0};
                     try
                     {
                         //int batch = 100000;// 10000;
-                        var opts = keepIdentity? SqlBulkCopyOptions.KeepIdentity: SqlBulkCopyOptions.Default;
+                        var opts = keepIdentity ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default;
                         if (sqlRowsCopiedAction != null)
                         {
                             opts |= SqlBulkCopyOptions.FireTriggers;
@@ -1248,6 +1249,110 @@ TRUNCATE TABLE {0};
             return true;
         }
 
+        public bool HugeInsertList<T>(
+            IList<T> list, string tableName,
+            SqlInsertCollection insert = null,
+            Action<BatchInsertOption> insertOptionAction = null,
+            Action<SqlInsertCollection, T> rowAction = null,
+            Action<int> sqlRowsCopiedAction = null)
+        {
+            if (list == null || list.Count < 1) { return false; }
+            bool autoUpdateByModel = false;//如果用户没提供insert,那说明字段是根据list生成的,可以自动更新
+            if (insert == null)
+            {
+                insert = new SqlInsertCollection(list[0]);
+                autoUpdateByModel = true;
+            }
+
+            var insertOption = new BatchInsertOption();
+            if (insertOptionAction != null) { insertOptionAction(insertOption); }
+
+            OpenConn();
+
+
+            var sb = new StringBuilder();
+
+            int idx = 0;
+
+            int batchSize = insertOption.ProcessBatch;// 50000;// tidb设置大些试试,测试100万行/25秒
+            int batchCnt = 0;
+
+            bool hasUnDo = false;
+            SetHugeCommandTimeOut();
+
+            int oneThousandCount = 0;
+            foreach (var i in list)
+            {
+                if (autoUpdateByModel)
+                {
+                    insert.UpdateModelValue(i);
+                }
+                //foreach (var i in insert)
+                //{
+                //    i.Value.Value = rdr[i.Key];
+                //}
+                if (rowAction != null) { rowAction(insert, i); }
+
+                //if (oneThousandCount > 999)//sqlserver里values最多1000行,但tidb没有这个限制(但这句留着备用)(注释这句的话,可以从19秒减少到14秒完成)
+                //{
+                //    oneThousandCount = 0;
+                //    sb.AppendFormat(@"; insert into {0}({1}) values({2})", tableName, insert.ToKeysSql(), insert.ToValuesSql());
+                //}
+                //else
+                if (oneThousandCount == 0)
+                {
+                    sb.AppendFormat(@" insert into {0}({1}) values({2})", tableName, insert.ToKeysSql(), insert.ToValuesSql());
+                }
+                else
+                {
+                    sb.AppendFormat(@",({0})", insert.ToValuesSql());
+                }
+
+                hasUnDo = true;
+                if (batchCnt > batchSize)
+                {
+                    //var b = ExecuteSql(sb.ToString(), false);
+                    var b = ExecuteSql(sb.ToString(), false);
+                    if (!b)
+                    {
+                        //rdr.Close();
+                        CloseConn();
+                        return false;
+                    }
+                    if (sqlRowsCopiedAction != null)
+                    {
+                        sqlRowsCopiedAction(idx);
+                    }
+                    sb.Clear();
+
+                    hasUnDo = false;
+                    batchCnt = 0;
+                    oneThousandCount = 0;
+                }
+                else
+                {
+                    batchCnt++;
+                    oneThousandCount++;
+                }
+                idx++;
+            }
+
+            if (hasUnDo)
+            {
+                var b = ExecuteSql(sb.ToString(), false);
+                if (!b)
+                {
+                    //rdr.Close();
+                    CloseConn();
+                    return false;
+                }
+            }
+            //rdr.Close();
+            CloseConn();
+
+            return true;
+        }
+
         public bool PFBulkTable(DataTable tableColumn,
             DbDataReader rdr, string tableName,
             Action<DataRow> rowAction = null,
@@ -1355,7 +1460,7 @@ TRUNCATE TABLE {0};
             //MessageBox.Show("导入l_mm_card_map_user完成");
             return true;
         }
-        public bool BatchUpdate<T>(string tableName, SqlDataReader rdr, Func<SqlDataReader, T> rdrAction, ref SqlUpdateCollection update,  Action<int> batchProcess = null)
+        public bool BatchUpdate<T>(string tableName, SqlDataReader rdr, Func<SqlDataReader, T> rdrAction, ref SqlUpdateCollection update, Action<int> batchProcess = null)
             where T : new()
         {
 
@@ -1522,7 +1627,7 @@ drop table pf_tmp_{0}
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool TransferToOtherTable(string srcTable,string srcDb,string dstTable,string dstDb)
+        public bool TransferToOtherTable(string srcTable, string srcDb, string dstTable, string dstDb)
         {
             string sql = string.Format(@"
 declare @colNames varchar(max),@sql nvarchar(max),@hasBiaoShi bit,@biaoShiCol varchar(max);
@@ -1584,7 +1689,7 @@ begin
   SET IDENTITY_Insert {3}.[dbo].{2} OFF
 end
 
-", srcTable,srcDb,dstTable,dstDb);
+", srcTable, srcDb, dstTable, dstDb);
             return ExecuteTransactSql(sql);
         }
 
@@ -1594,7 +1699,7 @@ end
         /// <param name="dr"></param>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public  bool BulkToCSV(string sqlstr, string fileName, Action<int> batchProcess = null)
+        public bool BulkToCSV(string sqlstr, string fileName, Action<int> batchProcess = null)
         {
             ////以半角逗号（即,）作分隔符，列为空也要表达其存在。
             ////列内容如存在半角逗号（即,）则用半角引号（即""）将该字段值包含起来。
@@ -1674,7 +1779,7 @@ end
             return true;
         }
 
-        public bool CloseReader( DbDataReader reader)
+        public bool CloseReader(DbDataReader reader)
         {
             sqlCmd.Cancel();//如果没有这句,数据很多时 dr.Close 会很慢 https://www.cnblogs.com/xyz0835/p/3379676.html
             reader.Close();
@@ -1782,6 +1887,11 @@ end
         /// <returns></returns>
         public ProcManager(string connectionString) : base(connectionString) { }
 
+        public ProcManager(string month, bool flag)
+        {
+            string connectionString = PFSqlHelper.GetConnectionString(this._connectionstring, "YJQuery" + month);
+            Connection(connectionString);
+        }
         #region Private
         /// <summary>
         /// 因为多数DAL的SqlExec成员每次调用时都重新初始化了,把旧系统方法移过来时常常都忘了,所以写这个检查
@@ -1795,5 +1905,13 @@ end
             }
         }
         #endregion
+
+        public class BatchInsertOption
+        {
+            private int _processBatch = 500;
+            public int ProcessBatch { get { return _processBatch; } set { _processBatch = value; } }
+            private bool _autoUpdateModel = true;
+            public bool AutoUpdateModel { get { return _autoUpdateModel; } set { _autoUpdateModel = value; } }
+        }
     }
 }
