@@ -78,6 +78,7 @@ namespace Perfect
             //{ "xls", typeof(XlsExport) },
             //{ "xls", typeof(XlsExport65535) },
             //{ "xls", typeof(XlsxExport) },
+            { "xlsNoMulti", typeof(XlsExport) },//项目外包使用
             { "xls", typeof(XlsxExport1048576) },
             { "doc", typeof(WordExport) }
             //, 
@@ -427,7 +428,7 @@ namespace Perfect
             {
                 PFDataHelper.EachListRow(_data, (a, r) => dataCount++);//原版
             }
-            ////export.SetRowsStyle(0, currentRow, currentCell - 1, currentRow + dataCount - 1);
+            ////export.SetRowsStyle(0, currentRow, currentCell - 1, currentRow + dataCount - 1);            
             //此句内报错，要优化--benjamin todo
             if (!PFDataHelper.IsDebug)
             {
@@ -444,11 +445,11 @@ namespace Perfect
                     var tree = new TreeListItem();
                     tree.Children = data.data as List<TreeListItem>;
                     int rowIndex = 0;
-                    int colIndex = 0;
+                    //int colIndex = 0;
                     var matrix = new TreeMatrix(tree.Children);
                     tree.EachChild((a, deep) =>
                     {
-                        colIndex = 0;
+                        //colIndex = 0;
                         PFDataHelper.EachObjectProperty(a.Data, (b, name, value) =>
                         {
                             if (fieldIndex.ContainsKey(name))
@@ -459,7 +460,8 @@ namespace Perfect
                                     {
                                         value = _fieldFormatter[name].Format(value);
                                     }
-                                    if (colIndex == 0)
+                                    //if (colIndex == 0)
+                                    if (cellIndex == 0)
                                     {
                                         var line = "";
                                         for (var j = 0; j < deep - 2; j++)
@@ -472,7 +474,7 @@ namespace Perfect
                                     }
                                     export.FillData(cellIndex, currentRow, name, value);
                                 }
-                                colIndex++;
+                                //colIndex++;
                             }
                         });
                         rowIndex++;
@@ -618,7 +620,7 @@ namespace Perfect
 
         //private void SaveToLocal(string fileName)
         //{
-        //    //测试xlsx下载后打不开的问题，暂保存到本地试试--benjamin 
+        //    //测试xlsx下载后打不开的问题，暂保存到本地试试--benjamin todo
         //    var path = Path.Combine(PFDataHelper.BaseDirectory, "output", fileName);
         //    var directoryName = Path.GetDirectoryName(path);
         //    PFDataHelper.DeleteFile(path);
@@ -631,10 +633,24 @@ namespace Perfect
         //}
         public void Download()
         {
-            var tmpEx = _exporter as XlsxExport;
-            if (tmpEx != null)
+            ////var tmpEx = _exporter as XlsxExport;
+            //var tmpEx = _exporter as XlsxExport1048576;
+            Aspose.Cells.Workbook book = null;
+            if (_exporter is XlsxExport1048576) { book = (_exporter as XlsxExport1048576).workbook; }
+            if (_exporter is XlsxExport) { book = (_exporter as XlsxExport).workbook; }
+            if (book != null)
             {
-                PFDataHelper.DownloadExcel(HttpContext.Current, tmpEx.workbook, string.Format("{0}.{1}", _fileName, _suffix), PFDataHelper.GetConfigMapper().GetNetworkConfig().DownloadSpeed);
+                //if (PFDataHelper.IsDebug)
+                //{
+                //    var fileName = string.Format("test_{0}.{1}", _fileName, _suffix);
+                //    var tmpFileName = Guid.NewGuid().ToString("N") + DateTime.Now.ToString("yyyyMMddHHmmss") + fileName;
+                //    var path = Path.Combine(PFDataHelper.BaseDirectory, "TempFile", tmpFileName);
+                //    var directoryName = Path.GetDirectoryName(path);
+                //    PFDataHelper.CreateDirectory(directoryName);
+                //    //book.Save(path, Aspose.Cells.FileFormatType.Xlsx);
+                //    book.Save(path, Aspose.Cells.SaveFormat.Xlsx);
+                //}
+                PFDataHelper.DownloadExcel(HttpContext.Current, book, string.Format("{0}.{1}", _fileName, _suffix), PFDataHelper.GetConfigMapper().GetNetworkConfig().DownloadSpeed);
             }
             else
             {
@@ -670,6 +686,18 @@ namespace Perfect
             {
                 _fileStream.Dispose();
             }
+            //2848 kbs
+            //_data = null;
+            //PFDataHelper.DisaposeObject<PagingResult>(_data);
+            PFDataHelper.DisaposeObject(_data);
+            _data = null;
+            //if(_data!=null&&_data is PagingResult)
+            //{
+            //    (_data as PagingResult).Dispose();
+            //    _data = null;
+            //}
+            PFDataHelper.GCCollect();
+            //GC.Collect(); //2848-500=2329
         }
     }
 }

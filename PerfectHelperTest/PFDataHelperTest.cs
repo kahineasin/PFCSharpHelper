@@ -173,6 +173,8 @@ select count(*) from orders where hybh='40027931'
         [TestMethod]
         public void TestEnum()
         {
+            var aa =PFDataHelper.ObjectToEnum<FuncAuthority>(1);
+            return;
             Func<FuncAuthority, FuncAuthority, bool> checkAuthor = (myAuth, needAuth) =>
             {
                 return PFDataHelper.EnumAnyFlag(myAuth, needAuth);

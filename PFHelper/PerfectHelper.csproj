@@ -98,7 +98,7 @@
     <Compile Include="PFMqHelper.cs" />
     <Compile Include="PFPivotTable.cs" />
     <Compile Include="PFSqlUpdateValidateHelper.cs" />
-    <Compile Include="Sql\SqlHelper.cs" />
+    <Compile Include="Sql\PFSqlHelper.cs" />
     <Compile Include="ZipUtility.cs" />
     <Compile Include="Config\PFConfigMapper.cs" />
     <Compile Include="DotNet\CheckBoxColumn.cs" />

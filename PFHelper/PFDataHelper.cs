@@ -82,6 +82,14 @@ namespace Perfect
                 return ConfigurationManager.AppSettings["PFUseLocalData"] != null && bool.Parse(ConfigurationManager.AppSettings["PFUseLocalData"]);
             }
         }
+        public static bool AllowGCCollect
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["PFAllowGCCollect"] != null && bool.Parse(ConfigurationManager.AppSettings["PFAllowGCCollect"]);
+            }
+        }
+
         /// <summary>
         /// 允许自动登陆(免登陆,分公司跨平台)
         /// </summary>
@@ -130,6 +138,7 @@ namespace Perfect
         /// 月份格式
         /// </summary>
         public static string MonthFormat = "yyyy.MM";
+        public static string DayFormat = "yyyy-MM-dd";
         public static string YMFormat = "yyyyMM";
 
         /// <summary>
@@ -137,6 +146,11 @@ namespace Perfect
         /// </summary>
         public static PFCmonth SysMaxMonth;
         public static PFCmonth SysMinMonth;
+
+        /// <summary>
+        /// 小数精确度默认4位(常用于除法的小数保留位数)
+        /// </summary>
+        public static int DecimalPrecision = 4;
 
         /// <summary>
         /// 系统允许的最小时间(在sql的允许范围内),一般为了使Sql插入时不报错,可以把小于这个值的设成此值
@@ -322,6 +336,16 @@ namespace Perfect
             var cmonth = ObjectToString(cmonthObj);
             if (cmonth.Length < 7) { return null; }
             return CMonthToDate(cmonth);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cmonth"></param>
+        /// <returns></returns>
+        public static string CMonthAddMonths(string cmonth, int months)
+        {
+            if (cmonth == null) { return null; }
+            return DateToCMonth(PFDataHelper.CMonthToDate(cmonth).AddMonths(months));
         }
         //public static DateTime YmToDate(string cmonth)
         //{
@@ -1142,6 +1166,22 @@ namespace Perfect
                 return o1.Equals(o2);
             }
         }
+
+        //public static void DisaposeObject<T>(object o1)
+        //    where T: class,IDisposable
+        //{
+        //    if (o1 == null) { return; }
+        //    (o1 as T).Dispose();
+        //    o1 = null;
+        //}
+        public static void DisaposeObject(object o1)
+        {
+            if (o1 == null) { return; }
+            if (o1 is IDisposable)
+            {
+                (o1 as IDisposable).Dispose();
+            }
+        }
         #endregion Object
         /// <summary>
         /// 同比
@@ -1893,10 +1933,10 @@ namespace Perfect
                             {
                                 if (dataType == typeof(decimal))
                                 {
-                                    row[i.Key] = ig.Average(delegate (DataRow r)
+                                    row[i.Key] = Math.Round(ig.Average(delegate (DataRow r)
                                     {
-                                        return PFDataHelper.ObjectToDecimal(r[i.Key]);
-                                    });
+                                        return PFDataHelper.ObjectToDecimal(r[i.Key]) ?? 0;
+                                    }), DecimalPrecision);
                                 }
                                 else if (dataType == typeof(int))
                                 {
@@ -1962,6 +2002,48 @@ namespace Perfect
         {
             return string.Format("IIF({1}>0,({0}/{1})*100,0)", actual, plan);
         }
+        /// <summary>
+        /// 便于统一改为不执行
+        /// </summary>
+        public static void GCCollect()
+        {
+            if (AllowGCCollect)
+            {
+                GC.Collect();
+            }
+        }
+        /// <summary>
+        /// 清理对象
+        /// </summary>
+        public static void ClearDataTable(DataTable dt)
+        {
+            while (dt.Rows.Count > 0)
+            {
+                dt.Rows.RemoveAt(0);
+            }
+            dt.Clear();
+            dt.Dispose();
+            dt = null;
+            GCCollect();
+            //GC.Collect();
+        }
+        public static void ClearDictList<TKey, TVaue>(List<Dictionary<TKey, TVaue>> dictList)
+        {
+            foreach (var i in dictList)
+            {
+                i.Clear();
+            }
+            dictList.Clear();
+            dictList = null;
+            GCCollect();
+            //GC.Collect();
+        }
+        public static void ClearArray(Array array)
+        {
+            array = null;
+            GCCollect();
+            //GC.Collect();
+        }
         #endregion DataTable
 
         #region Tree
@@ -1979,7 +2061,7 @@ namespace Perfect
                 });
             }
         }
-        #endregion
+        #endregion Tree
 
         #region List
 
@@ -3793,10 +3875,12 @@ namespace Perfect
             EnsureFilePath(filePath);
             //FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate);
             FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            //FileStream fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write);
             var sw = new StreamWriter(fs);
             sw.Write(s);
             sw.Flush();
             sw.Close();
+            sw.Dispose();
         }
         public static void AppendLineToFile(string filePath, params string[] line)
         {
@@ -3810,6 +3894,7 @@ namespace Perfect
             }
             sw.Flush();
             sw.Close();
+            sw.Dispose();
         }
         public static string ReadFileToString(string filePath, Encoding encoding = null)
         {
@@ -3935,6 +4020,7 @@ namespace Perfect
                 }
                 catch (Exception e)
                 {
+                    WriteError(e);
                 }
             }
             return resultList.ToArray();
@@ -4321,7 +4407,8 @@ namespace Perfect
                 }
                 if (postOption != null && (!postOption.KeepAlive))
                 {
-                    System.GC.Collect();
+                    GCCollect();
+                    //System.GC.Collect();
                 }
                 return r;
             }
@@ -4371,7 +4458,8 @@ namespace Perfect
             switch (summaryType)
             {
                 case SummaryType.Average:
-                    return dt.Rows.Count < 1 ? 0 : (PFDataHelper.ColumnTotal(dt, columnName) / dt.Rows.Count);
+                    //return dt.Rows.Count < 1 ? 0 : (PFDataHelper.ColumnTotal(dt, columnName) / dt.Rows.Count);
+                    return dt.Rows.Count < 1 ? 0 : Math.Round((PFDataHelper.ColumnTotal(dt, columnName) / dt.Rows.Count), DecimalPrecision);
                 default:
                     return PFDataHelper.ColumnTotal(dt, columnName);
             }
@@ -4543,6 +4631,10 @@ namespace Perfect
                         }
                         header.Add(dictionary);
                     }
+                    modelConfig.Dispose();
+                    modelConfig = null;
+                    GCCollect();
+                    //GC.Collect();
                 }
                 else//head不为null时
                 {
@@ -4582,6 +4674,14 @@ namespace Perfect
                 {
                     r.exData = dataTable.ExtendedProperties["exData"];
                 }
+
+                //如果清了dataTable,cache就空了
+                //PFDataHelper.ClearDataTable(dataTable);
+                //dataTable = null;
+                //PFDataHelper.ClearDataTable(all);
+                //all = null;
+
+
                 return r;
                 //var jsResult = new PFJsonResult();
                 //jsResult.Data = r;
@@ -5425,7 +5525,7 @@ string.Join("\r\n", errors.ToArray())
         #endregion
     }
 
-    public class PFModelConfigCollection : Dictionary<string, PFModelConfig>
+    public class PFModelConfigCollection : Dictionary<string, PFModelConfig>, IDisposable
     {
         private Dictionary<string, string> _commonPrev = new Dictionary<string, string> {
             { "old_","原" }
@@ -5489,6 +5589,10 @@ string.Join("\r\n", errors.ToArray())
                 var low = key.ToLower();
                 base[low] = value;
             }
+        }
+        public void Dispose()
+        {
+            this.Clear();
         }
     }
     public class PFModelConfigMapper
@@ -6665,12 +6769,25 @@ where rownumber between {1} and {2}
     /// <summary>
     /// 分页查询结果
     /// </summary>
-    public class PagingResult
+    public class PagingResult : IDisposable
     {
         public IList data { get; set; }
         public object exData { get; set; }//为了减少前端多次请求,便于放其它数据
         public StoreColumnCollection columns { get; set; }
         public int total { get; set; }
+        public string TableCacheKey { get; set; }
+
+        public void Dispose()
+        {
+            //data.Clear();
+            data = null;//2329-700 =1662
+            exData = null;
+            columns = null;
+            PFDataHelper.GCCollect();
+            //GC.Collect();
+            //var aa = "aa";
+            //throw new NotImplementedException();
+        }
     }
     /// <summary>
     /// 汇总类型
@@ -6737,6 +6854,12 @@ where rownumber between {1} and {2}
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
         public object summary { get; set; }
 
+        /// <summary>
+        /// 日期显示格式
+        /// </summary>
+        [DefaultValue("")]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore, DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string dateFormat { get; set; }
         public StoreColumn() { }
         public StoreColumn(string fieldName)
         {
@@ -8753,7 +8876,8 @@ where rownumber between {1} and {2}
             if (Messages != null)
             {
                 Messages.Clear();
-                GC.Collect();
+                PFDataHelper.GCCollect();
+                //GC.Collect();
             }
         }
         public override string ToString()
@@ -8811,7 +8935,8 @@ Date:{1}
             statusList.Clear();
             receiveStatus.Clear();
             Message.Clear();
-            GC.Collect();
+            PFDataHelper.GCCollect();
+            //GC.Collect();
         }
 
         private void CloseStream()
@@ -9136,7 +9261,9 @@ Date:{1}
             string szTemp;
             Message.Clear();
             receiveStatus.Clear();
-            GC.Collect();
+
+            PFDataHelper.GCCollect();
+            //GC.Collect();
             try
             {
                 //根据邮件编号从服务器获得相应邮件 
@@ -9723,13 +9850,13 @@ Date:{1}
                 {
                     item.IsBegin = true;
                     item.Max = i;
-                    item.Title = i + unit + "以下";
+                    item.Title = string.Format("{0}{1}以下", i - 1, unit);
                 }
                 else
                 {
                     item.Max = i;
                     item.Min = vols[idx - 1];
-                    item.Title = string.Format("{0}-{1}{2}", item.Min, item.Max, unit);
+                    item.Title = string.Format("{0}-{1}{2}", item.Min, item.Max - 1, unit);
                 }
                 result.Add(item);
                 idx++;
@@ -9739,7 +9866,7 @@ Date:{1}
                 IsEnd = true,
                 Min = vols[vols.Length - 1]
             };
-            end.Title = string.Format("{0}{1}或以上", end.Min, unit);
+            end.Title = string.Format("{0}{1}以上", end.Min, unit);
             result.Add(end);
             return result;
         }
@@ -9776,15 +9903,27 @@ Date:{1}
         private bool _useDataReader = false;
         private bool _removeOldData = true;
         private Func<DataTable, DataTable> _dataRender = null;
-        private string _dstConnName = "dayConnection";
-        //public string SrcConn { get; set; }
-        public string SrcConnName { get; set; }
+        private string _srcConnName = null;
+        //private string _dstConnName = "dayConnection";
+        private string _dstConnName =null;
+        public string SrcConn { get; set; }
+        //public string SrcConnName { get; set; }
+        public string SrcConnName {
+            //get { return _srcConnName; }
+            set { _srcConnName = value;SrcConn = ConfigurationManager.ConnectionStrings[value].ConnectionString; }
+        }
         public PFSqlType? SrcSqlType { get; set; }
-        //public string DstConn { get { return _dstConnName; } set { _dstConnName = value; } }
+        public string DstConn { get; set; }
         /// <summary>
         /// 原来都是33.balance(DaySqlExec),现在多了华姐的
         /// </summary>
-        public string DstConnName { get { return _dstConnName; } set { _dstConnName = value; } }
+        //public string DstConnName { get { return _dstConnName; } set { _dstConnName = value; } }
+        public string DstConnName
+        {
+            //get { return _dstConnName; }
+            set { _dstConnName = value; DstConn = ConfigurationManager.ConnectionStrings[value].ConnectionString; }
+        }
+        public PFSqlType? DstSqlType { get; set; }
         //public string SrcSql { get { return PFDataHelper.ReadLocalTxt("mySqlTest_" + DstTableName + ".txt"); } }
         public string SrcSql { get; set; }
         //public DayTableEnum? DstTable { get; set; }

@@ -21,7 +21,7 @@ namespace Perfect
     ///           //...
     ///           
     ///           //if (!_dbReportService.TransferDayDataReader(dr, transferItem.DstTableName, transferItem.IsHugeData, out ms, (already) => {
-    ///           //    loadingfrm.SetJD("当前：正在复制", "当前进度：" + targetTableName + "(" + PFDataHelper.ScientificNotation(already) + ")");
+    ///           //    loadingfrm.SetJD(string.Format("总进度:{0}/{1}", already, taskTotal), string.Format("当前进度：复制{0}({1}/未知)",task.DstTableName,PFDataHelper.ScientificNotation(a)));
     ///           //}))
     ///
     ///            loadingfrm.SetFinish("导入成功");

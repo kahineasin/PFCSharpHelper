@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Perfect;
 using System;
 using System.Collections;
@@ -14,29 +15,90 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Perfect
-{ /// <summary>
-  /// DataBase 的摘要说明。
-  /// </summary>
+{
+    /// <summary>
+    /// 计算Conn没有关闭的情况
+    /// </summary>
+    public class SqlConnCounter
+    {
+        private static Dictionary<string, int> _cnt = new Dictionary<string, int>();
+        public static void Add(string connName)
+        {
+            if (!_cnt.ContainsKey(connName))
+            {
+                _cnt.Add(connName, 1);
+            }
+            else
+            {
+                _cnt[connName] += 1;
+                if (_cnt[connName] > 30)
+                {
+                    PFDataHelper.WriteError(new Exception(string.Format("连接{0}的连接数超过{1},请检查是否有程序问题", connName, _cnt[connName])));
+                }
+            }
+            WriteLocalTxt();
+            //PFDataHelper.WriteLocalTxt(string.Join("\r\n",_cnt.Select(a=>string.Join("\r\n",a.Key,a.Value)).ToArray()), "ListenSqlConn.txt");
+            ////PFDataHelper.WriteLocalJson(JsonConvert.SerializeObject(_cnt),"ListenSqlConn");
+        }
+        public static void Subtract(string connName)
+        {
+            if (!_cnt.ContainsKey(connName))//理论上这种情况是不会出现的
+            {
+                _cnt.Add(connName, -1);
+            }
+            else if (_cnt[connName] == 1)
+            {
+                _cnt.Remove(connName);
+            }
+            else
+            {
+                _cnt[connName] -= 1;
+            }
+            WriteLocalTxt();
+        }
+        //public static bool IsError()
+        //{
+        //    return _cnt.Any(a => a.Value > 30);
+        //}
+        public static Dictionary<string, int> GetCnt()
+        {
+            return _cnt;
+        }
+        public static void WriteLocalTxt()
+        {
+            try
+            {
+                PFDataHelper.WriteLocalTxt(string.Join("\r\n", _cnt.Select(a => string.Join("\r\n", a.Key, a.Value)).ToArray()), "ListenSqlConn.txt");
+            }
+            catch (Exception e) { }
+        }
+    }
+    /// <summary>
+    /// DataBase 的摘要说明。
+    /// </summary>
     public class DataBase : IDisposable
     {
         //protected string _connectionstring = "data source=10.0.0.11;initial catalog=yjquery;persist security info=False;user id=sa;password=perfect;Connect Timeout=2000";// ConfigurationManager.ConnectionStrings["yjquery"].ConnectionString;
         //protected string _connectionstring = ConfigurationManager.ConnectionStrings["DefaultConnectionString"].ConnectionString;
         protected string _connectionstring = null;
         protected SqlConnection _sqlconnection = new SqlConnection();
+        //protected SqlConnection _sqlconnection = null;
+        //[Obsolete("尽量不用此方法")]
         public DataBase()
         {
+            ////_sqlconnection.ConnectionString = _connectionstring;
+            //_connectionstring = ConfigurationManager.ConnectionStrings["DefaultConnectionString"].ConnectionString;
             //_sqlconnection.ConnectionString = _connectionstring;
-            _connectionstring = ConfigurationManager.ConnectionStrings["DefaultConnectionString"].ConnectionString;
-            _sqlconnection.ConnectionString = _connectionstring;
-            if (_sqlconnection.State != ConnectionState.Open)
-                _sqlconnection.Open();
+            //if (_sqlconnection.State != ConnectionState.Open)
+            //    _sqlconnection.Open();
         }
         public DataBase(string _connString)
         {
             _connectionstring = _connString;
             _sqlconnection.ConnectionString = _connectionstring;
-            if (_sqlconnection.State != ConnectionState.Open)
-                _sqlconnection.Open();
+            OpenConn();
+            //if (_sqlconnection.State != ConnectionState.Open)
+            //    _sqlconnection.Open();
         }
 
         public void Connection(string _connString)
@@ -45,18 +107,24 @@ namespace Perfect
 
             if (_sqlconnection.State == ConnectionState.Open)
             {
-                _sqlconnection.Close();
+                CloseConn();
+                //_sqlconnection.Close();
             }
             _sqlconnection.ConnectionString = _connectionstring;
-            _sqlconnection.Open();
+            OpenConn();
+            //_sqlconnection.Open();
         }
         public void OpenConn()
         {
             if (this._sqlconnection.State == ConnectionState.Closed)
-            { this._sqlconnection.Open(); }
+            {
+                this._sqlconnection.Open();
+                SqlConnCounter.Add(_sqlconnection.ConnectionString);//注意,此句要在.Open()之后,因为Open之后字符串会去掉密码
+            }
         }
         public void CloseConn()
         {
+            SqlConnCounter.Subtract(_sqlconnection.ConnectionString);
             this._sqlconnection.Close();
         }
 
@@ -64,8 +132,10 @@ namespace Perfect
         {
             if (_sqlconnection.State == ConnectionState.Open)
             {
-                _sqlconnection.Close();
+                CloseConn();
+                //_sqlconnection.Close();
                 _sqlconnection.Dispose();
+                _sqlconnection = null;
             }
         }
     }
@@ -294,8 +364,9 @@ namespace Perfect
         public bool ExecProcedure()
         {
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandText = _procname;
             try
@@ -303,13 +374,15 @@ namespace Perfect
                 sqlCmd.ExecuteNonQuery();
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return true;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }
@@ -320,8 +393,9 @@ namespace Perfect
         public bool ExecProcedure(int timeout)
         {
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandTimeout = timeout;
             sqlCmd.CommandText = _procname;
@@ -330,13 +404,15 @@ namespace Perfect
                 sqlCmd.ExecuteNonQuery();
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return true;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }
@@ -347,8 +423,9 @@ namespace Perfect
         public bool ExecuteSql(string sqlstr, bool autoClose = true)
         {
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlstr;
             try
@@ -357,14 +434,16 @@ namespace Perfect
                 //将参数导出
                 if (autoClose)
                 {
-                    this._sqlconnection.Close();
+                    CloseConn();
+                    //this._sqlconnection.Close();
                 }
                 return true;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }
@@ -376,8 +455,9 @@ namespace Perfect
         /// <returns></returns>
         public bool ExecuteTransactSql(string sqlStr, bool autoClose = true)
         {
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             bool flag = false;
             SqlTransaction sqltran = this._sqlconnection.BeginTransaction();
             SqlCommand sqlcmd = this._sqlconnection.CreateCommand();
@@ -411,7 +491,8 @@ namespace Perfect
             {
                 if (autoClose)
                 {
-                    this._sqlconnection.Close();
+                    CloseConn();
+                    //this._sqlconnection.Close();
                 }
             }
             return flag;
@@ -425,8 +506,9 @@ namespace Perfect
         {
             EnsureProcNotNull();
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandText = _procname;
             sqlCmd.CommandTimeout = 9600;
@@ -437,13 +519,15 @@ namespace Perfect
                 sqlda.Fill(ds);
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return ds.Tables[0];
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -455,8 +539,9 @@ namespace Perfect
         public DataTable GetQueryTable1()
         {
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandTimeout = 300;
             sqlCmd.CommandText = _procname;
@@ -467,13 +552,15 @@ namespace Perfect
                 sqlda.Fill(ds);
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return ds.Tables[0];
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -487,8 +574,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandText = _procname;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -499,7 +587,8 @@ namespace Perfect
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }
@@ -513,8 +602,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlstr;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 return sqlCmd.ExecuteReader(CommandBehavior.CloseConnection);
@@ -522,7 +612,8 @@ namespace Perfect
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -531,8 +622,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlstr;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 return sqlCmd.ExecuteReader(CommandBehavior.CloseConnection);
@@ -540,7 +632,8 @@ namespace Perfect
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -556,8 +649,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandText = _procname;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -571,13 +665,15 @@ namespace Perfect
                     }
                 }
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return myvalues;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -589,8 +685,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlval;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -601,13 +698,15 @@ namespace Perfect
                     dr.GetValues(myvalues);
                 }
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return myvalues;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 myvalues = null;
                 return myvalues;
             }
@@ -620,8 +719,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlval;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -666,13 +766,15 @@ namespace Perfect
                     }
                 }
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return myvalues;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 myvalues = null;
                 return myvalues;
             }
@@ -690,8 +792,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandText = _procname;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -702,13 +805,15 @@ namespace Perfect
                     myvalues.Add(dr[0].ToString(), dr[1].ToString());
                 }
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return myvalues;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -724,8 +829,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlval;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -736,13 +842,15 @@ namespace Perfect
                     myvalues.Add(dr[0].ToString(), dr[1].ToString());
                 }
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return myvalues;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -759,8 +867,9 @@ namespace Perfect
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sqlval;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             try
             {
                 dr = sqlCmd.ExecuteReader(CommandBehavior.SingleResult);
@@ -774,13 +883,15 @@ namespace Perfect
                     }
                 }
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return myvalues;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -793,8 +904,9 @@ namespace Perfect
         {
             sqlCmd.Connection = this._sqlconnection;
             sqlCmd.CommandTimeout = 9600;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.StoredProcedure;
             sqlCmd.CommandText = _procname;
             sqlda.SelectCommand = sqlCmd;
@@ -804,13 +916,15 @@ namespace Perfect
                 sqlda.Fill(ds);
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return ds;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -822,8 +936,9 @@ namespace Perfect
         public DataSet GetQueryDataSet(string sql)
         {
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             sqlCmd.CommandType = CommandType.Text;
             sqlCmd.CommandText = sql;
             sqlda.SelectCommand = sqlCmd;
@@ -833,13 +948,15 @@ namespace Perfect
                 sqlda.Fill(ds);
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return ds;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -850,8 +967,9 @@ namespace Perfect
         public DataSet GetQueryDataSetTransact(string sql)
         {
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //if (this._sqlconnection.State == ConnectionState.Closed)
+            //    this._sqlconnection.Open();
             SqlTransaction sqltran = this._sqlconnection.BeginTransaction();
             sqlCmd.Transaction = sqltran;
             sqlCmd.CommandType = CommandType.Text;
@@ -864,14 +982,16 @@ namespace Perfect
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
                 sqltran.Commit();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return ds;
             }
             catch (System.Exception ex)
             {
                 sqltran.Rollback();
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -906,13 +1026,15 @@ namespace Perfect
                 sqlda.Fill(ds);
                 //将参数导出
                 ParameterArray = sqlCmd.Parameters;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return ds.Tables[0];
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -936,13 +1058,15 @@ namespace Perfect
                 {
                     robj = null;
                 }
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return robj;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return robj;
             }
         }
@@ -1004,13 +1128,15 @@ TRUNCATE TABLE {0};
                 bulkCopy.BatchSize = 10000;
                 bulkCopy.BulkCopyTimeout = CommandTimeOut;
                 bulkCopy.WriteToServer(dt);
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return true;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }
@@ -1024,8 +1150,9 @@ TRUNCATE TABLE {0};
                 return false;
             }
             sqlCmd.Connection = this._sqlconnection;
-            if (this._sqlconnection.State == ConnectionState.Closed)
-                this._sqlconnection.Open();
+            OpenConn();
+            //    if (this._sqlconnection.State == ConnectionState.Closed)
+            //        this._sqlconnection.Open();
 
             try
             {
@@ -1053,7 +1180,8 @@ TRUNCATE TABLE {0};
                 bulkCopy.EnableStreaming = true;
                 bulkCopy.WriteToServer(dr);
                 dr.Close();
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return true;
             }
             catch (System.Exception ex)
@@ -1096,8 +1224,9 @@ TRUNCATE TABLE {0};
                 else
                 {
                     sqlCmd.Connection = this._sqlconnection;
-                    if (this._sqlconnection.State == ConnectionState.Closed)
-                        this._sqlconnection.Open();
+                    OpenConn();
+                    //            if (this._sqlconnection.State == ConnectionState.Closed)
+                    //                this._sqlconnection.Open();
 
                     try
                     {
@@ -1126,7 +1255,8 @@ TRUNCATE TABLE {0};
                         var bulkTask = bulkCopy.WriteToServerAsync(dr);
                         bulkTask.Wait();
                         dr.Close();
-                        this._sqlconnection.Close();
+                        CloseConn();
+                        //this._sqlconnection.Close();
                         return true;
 
                     }
@@ -1878,7 +2008,8 @@ end
         /// 类构造函数
         /// </summary>
         /// <returns></returns>
-        public ProcManager()
+        [Obsolete("尽量不用此方法")]
+        public ProcManager() : base()
         {
         }
         /// <summary>
@@ -1887,9 +2018,17 @@ end
         /// <returns></returns>
         public ProcManager(string connectionString) : base(connectionString) { }
 
-        public ProcManager(string month, bool flag)
+        [Obsolete("尽量不用此方法")]
+        public ProcManager(string month, bool flag) : base()
         {
+            _connectionstring = ConfigurationManager.ConnectionStrings["YJQuery"].ConnectionString;
             string connectionString = PFSqlHelper.GetConnectionString(this._connectionstring, "YJQuery" + month);
+            Connection(connectionString);
+        }
+        public ProcManager(string connStr, string databaseName) : base()
+        {
+            _connectionstring = connStr;
+            string connectionString = PFSqlHelper.GetConnectionString(this._connectionstring, databaseName);
             Connection(connectionString);
         }
         #region Private
