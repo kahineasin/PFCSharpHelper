@@ -34,6 +34,7 @@ namespace Perfect
                 if (_cnt[connName] > 30)
                 {
                     PFDataHelper.WriteError(new Exception(string.Format("连接{0}的连接数超过{1},请检查是否有程序问题", connName, _cnt[connName])));
+                    _cnt.Remove(connName);
                 }
             }
             WriteLocalTxt();
@@ -1187,7 +1188,8 @@ TRUNCATE TABLE {0};
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }
@@ -1263,7 +1265,8 @@ TRUNCATE TABLE {0};
                     catch (System.Exception ex)
                     {
                         Error = ex;
-                        this._sqlconnection.Close();
+                        CloseConn();
+                        //this._sqlconnection.Close();
                         b = false;
                     }
                 }

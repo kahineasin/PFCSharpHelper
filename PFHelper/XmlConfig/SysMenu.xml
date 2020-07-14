@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Menus>
+  <Menu name="顾客">
+    <Menus>
+      <Menu name="业绩概况" url="/YJQuery/AchievementOverview/Index"></Menu>
+      <Menu name="系统运行状态" url="/YJQuery/Test/SysStatus"></Menu>
+      <Menu name="权限迁移" url="/YJQuery/MigrationAuthority/Index"></Menu>
+      <Menu name="查看权限申请" url="/YJQuery/AuthorApply/Index"></Menu>
+      <Menu name="顾客资料查询" url="/Hyzl/YWYZL/FirstStep"></Menu>
+      <Menu name="产品资料" url="/Hyzl/Product/Index"></Menu>
+      <Menu name="专卖店资料" url="/Hyzl/Shop/Index"></Menu>
+      <Menu name="不活跃查询" url="/Hyzl/NoActive/Index"></Menu>
+      <Menu name="根据姓名批量查找用户" url="/Hyzl/BatchSearchUserByName/Index"></Menu>
+      <Menu name="返场顾客资料确认" url="/Hyzl/QualifiedHy/Index"></Menu>
+      <Menu name="经办人修改历史记录" url="/Hyzl/MonthHyzlChange/Index"></Menu>
+      <Menu name="已确认顾客查询" url="/Hyzl/ConfirmOldCardActive/Index"></Menu>
+      <Menu name="云+修改店号" url="/Hyzl/CloudPlusAgent/Index"></Menu>
+      <Menu name="直销员查询" url="/Hyzl/Seller/Index"></Menu>
+      <Menu name="激活旧卡顾客" url="/Hyzl/OldHyActive/Index"></Menu>
+      <Menu name="最近购货信息" url="/Hyzl/RecentBuy/Index" refTable="yjquery.s"></Menu>
+      <Menu name="新增顾客专享礼包" url="/Hyzl/NewCustomerGift/Index" refTable="blreport.t_sale_p1,blreport.t_sale_p2,blreport.p_hyzl_getdata"></Menu>
+      <Menu name="月结数据">
+        <Menus>
+          <Menu name="各月顾客查询" url="/Hyzl/MonthlyHyzl/Index" refTable="yjquerymonth.hyzl,yjquerymonth.cus,yjquerymonth.p1,yjquerymonth.s1"></Menu>
+          <Menu name="各月顾客查询(TiDb)" url="/Hyzl/MonthlyHyzlTiDb/Index" refTable="yjquerymonth.hyzl,yjquerymonth.cus,yjquerymonth.p1,yjquerymonth.s1"></Menu>
+          <Menu name="各月团队查询" url="/Hyzl/MonthlyHyTeam/Index" refTable="yjquerymonth.d1"></Menu>
+          <Menu name="各月批量查上级" url="/Hyzl/MonthlyFindBjhy/Index" refTable="yjquerymonth.d1"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="联通日结数据">
+        <Menus>
+          <Menu name="日结会员" url="/Unicom/DayHyzl/Index" refTable="day.t_hyzl"></Menu>
+          <Menu name="日结会员等级" url="/Unicom/DayHyzlPos/Index" refTable="day.t_hyzl"></Menu>
+        </Menus>
+      </Menu>
+      <!--<Menu name="Pivot" url="/Hyzl/Test/PivotGrid" ></Menu>
+      <Menu name="Tab" url="/Hyzl/Test/Tab" ></Menu>-->
+      <Menu name="选择月份" url="/Hyzl/Home/SelectMonth" icon="system" allUser="true"></Menu>
+    </Menus>
+  </Menu>
+  <Menu name="业绩">
+    <Menus>
+      <Menu name="当月升级人员" url="/Bonus/PersonCurMonth/Index"></Menu>
+      <Menu name="某级别人员" url="/Bonus/PersonSomeLevel/Index"></Menu>
+      <Menu name="个人网络贡献查询" url="/Bonus/PersonNetWork/Index"></Menu>
+      <Menu name="赠品查询" url="/Bonus/GlandlbQry/Index" refTable="yjquery.GLTotal,yjquery.GLtype"></Menu>
+      <Menu name="循环保荐查询" url="/Bonus/Xhbj/Index"></Menu>
+      <Menu name="新人无买货或不够400PV" url="/Bonus/No400PV/Index"></Menu>
+      <Menu name="玛丽艳积分查询" url="/Bonus/MLYPV/Index"></Menu>
+      <Menu name="玛丽艳个人积分排名" url="/Bonus/MLYSort1000/Index" refTable="yjquery.mly_s"></Menu>
+      <Menu name="报表">
+        <Menus>
+          <Menu name="信誉指数查询" url="/Bonus/ReportQuery01/Index" refTable="yjquery.pr_active"></Menu>
+          <Menu name="玛艳奖师额外奖励表" url="/Bonus/ReportQuery03/Index"></Menu>
+          <Menu name="业绩排名表" url="/Bonus/ReportQuery04/Index"></Menu>
+          <Menu name="打印网络图" url="/Bonus/ReportQuery05/Index"></Menu>
+          <Menu name="培训名单" url="/Bonus/ReportQuery06/Index"></Menu>
+          <Menu name="查询个人资料" url="/Bonus/ReportQuery07/Index"></Menu>
+          <Menu name="玛丽艳讲师查询" url="/Bonus/MlyJs/Index"></Menu>
+          <Menu name="每月新增顾客统计查询" url="/Bonus/NewCustomer/Index" refTable="yjquerymonth.hyzl,yjquerymonth.s1,yjquerymonth.cus"></Menu>
+          <!--<Menu name="树状图(先不做)" url="/Bonus/SimpleTree/Index"></Menu>-->
+        </Menus>
+      </Menu>
+      <Menu name="优惠顾客分析">
+        <Menus>
+          <Menu name="优惠顾客分析" url="/Bonus/CustomerAnalyse/Index"></Menu>
+          <Menu name="某团队新增优惠顾客活跃率分析" url="/Bonus/CustomerActive/Index"></Menu>
+          <Menu name="某团队在分公司销售业绩" url="/Bonus/TeamSalesBySF/Index"></Menu>
+          <Menu name="某团队各类别产品销售业绩" url="/Bonus/TeamSalesByInv/Index"></Menu>
+          <Menu name="某团队新增优惠顾客业绩" url="/Bonus/TeamNewHyYJ/Index"></Menu>
+          <Menu name="重点团队业绩" url="/Bonus/MainTeamNewHyYJ/Index" refTable="yjquery.pw_customer_Team_newHY_YJ,yjquerymonth.p1"></Menu>
+
+          <Menu name="按级别查询业绩信息" url="/Hyzl/LevelAchievement/Index"></Menu>
+          <!--<Menu name="业务人员关键指标" url="/Hyzl/BusinessKeyIndicators/Index"></Menu>-->
+          <Menu name="批量查询业务人员上级" url="/Hyzl/BusinessHigher/Index"></Menu>
+          <Menu name="查询产品销售分布" url="/Hyzl/SalesDistribution/Index"></Menu>
+          <Menu name="批量查询身份证信息" url="/Bonus/IDCard/Index"></Menu>
+          <Menu name="查询新晋级别" url="/Bonus/NewLevel/Index"></Menu>
+          <Menu name="批量按团队查某级别名单" url="/Bonus/NameByTeamLevel/Index"></Menu>
+          <Menu name="批量查询团队业绩增长率" url="/Bonus/YJGrowthRate/Index"></Menu>
+          <Menu name="产品消费情况" url="/Bonus/ProductConsumption/Index"></Menu>
+          <Menu name="快速上升级别" url="/Bonus/RapidRiseLevel/Index"></Menu>
+          <Menu name="追踪被关注店" url="/Bonus/TrackAttention/Index"></Menu>
+          <Menu name="团队购货情况表" url="/Bonus/TeamPurchase/Index"></Menu>
+          <Menu name="服务中心报单信息" url="/Bonus/ServiceCenterReport/Index"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="促销产品积分查询" url="/Bonus/CuXiaoSelect/Index" refTable="yjquery.BUnitM,yjquery.BUnitType"></Menu>
+      <Menu name="个人信息汇总" url="/Bonus/PersonInfo/Index"></Menu>
+      <Menu name="业绩分析-月结后" url="/Bonus/PerformanceAnalysis/Index"></Menu>
+
+      <Menu name="利保">
+        <Menus>
+          <!--<Menu name="系统过数(此功能不需要做)" url="/Bonus/LiBaoPass/Index"></Menu>-->
+          <Menu name="修改系统数据" url="/Bonus/LiBaoQuery1/Index"></Menu>
+          <Menu name="批量修改" url="/Bonus/LiBaoUpdate/Index"></Menu>
+          <Menu name="大客户专享计划查询" url="/Bonus/LiBaoQuery/Index" refTable="yjquery.p_libao_getItems2"></Menu>
+          <Menu name="历史记录查询" url="/Bonus/LiBaoQueryHistory/Index"></Menu>
+          <Menu name="处理利保资料统计" url="/Bonus/LiBaoStatus/Index"></Menu>
+          <Menu name="汇总各分公司人数" url="/Bonus/LiBaoQuery2/Index"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="奖金查询">
+        <Menus>
+          <Menu name="30%奖金过数" url="/Bonus/BonusPass/Index" debug="true"></Menu><!--跟阿伟确定再做wxjtodo-->
+          <Menu name="30%奖金查询" url="/Bonus/Bonus30Sel/Index"></Menu>
+          <Menu name="顾客级差奖" url="/Bonus/RangeAward/Index"></Menu>
+          <Menu name="518活动查询" url="/Bonus/Active518/Index"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="发放查询">
+        <Menus>
+          <Menu name="发放批次" url="/Bonus/FaFangQry01/Index"></Menu>
+          <Menu name="补扣批次" url="/Bonus/FaFangQry02/Index"></Menu>
+          <Menu name="每月发放统计" url="/Bonus/FaFangQry03/Index"></Menu>
+          <Menu name="每月汇总" url="/Bonus/FaFangQry04/Index"></Menu>
+          <!--<Menu name="发放查询(同上)" url=""></Menu>-->
+          <!--以下功能先不做-->
+          <!--<Menu name="双金钻工资" url="/Bonus/GGWage/Index"></Menu>
+          <Menu name="服务中心发票额度" url="/Bonus/InvoiceLimit/Index"></Menu>
+          <Menu name="奖金核对" url="/Bonus/ConfirmBonus/Index"></Menu>
+          <Menu name="顾客发放查询" url="/Bonus/FaFang00/Customer?flag=0"></Menu>
+          <Menu name="销售经理发放查询" url="/Bonus/FaFang00/SalesManager?flag=1"></Menu>
+          <Menu name="直销员发放查询" url="/Bonus/FaFang00/Sales?flag=2"></Menu>-->
+        </Menus>
+      </Menu>
+      <Menu name="省服务中心信息" url="/Bonus/YJInfo/Index" refTable="balance.p_seekyj1"></Menu>
+      <!--<Menu name="业绩信息1" url="/Bonus/YJInfo/Index1" ></Menu>-->
+      <Menu name="查询网络图" url="/Bonus/Meshwork/Index" refTable="balance.p_GetMeshwork2_1"></Menu>
+      <Menu name="店主团队各年龄段人数查询" url="/Bonus/YJLevel/Index"  refTable="balance.p_seekyj2"></Menu>
+      <Menu name="业绩-新增" url="/Bonus/YJNewAdd/Index"  refTable="balance.p_seekyj1mx1"></Menu>
+      <Menu name="产品-区域汇总" url="/Bonus/ProductAreaSummary/Index"  refTable="balance.p_seekyj6"></Menu>
+      <Menu name="美容产品积分查询" url="/Bonus/ReachStandard/Index"  refTable="balance.pw_mly_getYj"></Menu>
+      <Menu name="产品-销量" url="/Bonus/YJSales/Index"  refTable="balance.p_seekyj3"></Menu>
+      <Menu name="查询店主收入增长率" url="/Bonus/Income/Index"  refTable="balance.pw_yj_hb_getSR"></Menu>
+      <Menu name="省-网络图" url="/Bonus/YJProvinceNet/Index"  refTable="balance.p_GetMeshwork3,balance.agentnet,balance.agentyj"></Menu>
+      <Menu name="省-复购数量" url="/Bonus/RepeatSales/Index"  refTable="balance.pw_repeatSales"></Menu>
+      <Menu name="客单量" url="/Bonus/CusOrder/Index"  refTable="balance.pw_getCusOrder"></Menu>
+      <Menu name="大单消费" url="/Bonus/SaleOver10000/Index"  refTable="balance.pw_getSaleOver10000"></Menu>
+      <Menu name="省-最高级别" url="/Bonus/HighLevel/Index"  refTable="balance.p_seekyj4"></Menu>
+      <Menu name="省-次月不活跃" url="/Bonus/OnceHigh/Index"  refTable="balance.p_seekyj5"></Menu>
+      <Menu name="个人积分超额" url="/Bonus/PersonJiFen/Index"  refTable="balance.seekpersonover"></Menu>
+      <Menu name="积分超额集中店" url="/Bonus/ShopJiFen/Index"  refTable="balance.pw_seekcusover"></Menu>
+      <Menu name="业务员上级信息" url="/Hyzl/YWYZL/Bjhy"  refTable="balance.seekbjhy"></Menu>
+      <Menu name="销售日报表" url="/Bonus/SalesDailyReport/Index"  refTable="balance.pw_report_sales"></Menu>
+      <Menu name="服务中心各类产品销售比例" url="/Bonus/ProductSaleRate/Index"  refTable="balance.pw_report_sales_agent_month"></Menu>
+      <Menu name="产品类型业务汇总表" url="/Bonus/ProductBusinessSummary/Index"  refTable="balance.pw_report_sales_year_invtype"></Menu>
+      <Menu name="销售周报表" url="/Bonus/SalesWeekReport/Index"  refTable="balance.pw_report_sales_week"></Menu>
+      <Menu name="业绩指标情况表-提升新增" url="/Bonus/AchievementImproveNew/Index"  refTable="yjquery.P_CCReport_NewHY_Info"></Menu>
+      <Menu name="财务日报表" url="/Bonus/FinancialDailyReport/Index"  refTable="balance.pw_report_sales21"></Menu>
+      <!--<Menu name="各省各品类业绩" url="/Bonus/SalesSfInv/Index"  refTable="balance."></Menu>-->
+      <Menu name="各省各月预算" url="/Bonus/MonthlySfBudget/Index"  refTable="balance.t_planMonth"></Menu>
+      <Menu name="分公司品类业绩(新)" url="/Bonus/SalesFgsInvType/Index"  refTable="balance.SalesDay"></Menu>
+      <Menu name="销售预算(新)" url="/Bonus/SalesPlan/Index"  refTable="balance.t_planMonth"></Menu>
+      <Menu name="区域同比" url="/Bonus/RegionYearOnYear/Index"  refTable="balance.pw_report_sf_tb"></Menu>
+      <Menu name="单店明细" url="/Bonus/SingleShopDetail/Index"  refTable="balance.pw_report_agent_tb"></Menu>
+      <Menu name="提升复购" url="/Bonus/PromotionRePurchase/Index"  refTable="balance.pw_report_sf_impovefg"></Menu>
+      <Menu name="级别晋升" url="/Bonus/LevelPromotion/Index"  refTable="balance.pw_report_sf_impovePos"></Menu>
+      <Menu name="我的顾客" url="/Bonus/MyCustom/Index"  refTable="balance.p_firstGeneration"></Menu>
+      <Menu name="产品资料" url="/Bonus/InvBaseData/Index"  refTable="newshop.b_inv,newshop.B_invtype,newshop.b_inv_booktype,newshop.b_inv_kind"></Menu>
+      <Menu name="顾客资格查询" url="/Bonus/HyBaseData/Index"  refTable="BD_Server.[zmd_hy].[dbo].[B_HYZL]"></Menu>
+      <Menu name="新顾客查询" url="/Bonus/QueryNewCustomer/Index"  refTable="newshop.newCustomer"></Menu>
+      <Menu name="服务中心负责人业绩" url="/Bonus/AgentFzrSale/Index"></Menu>
+      <Menu name="服务中心负责人业绩(含服务中心号)" url="/Bonus/ServiceCenterFzrSale/Index" refTable="yjquerymonth.orders,yjquerymonth.ordersdetail,yjquerymonth.t_inv,yjquerymonth.cus,yjquerymonth.p1"></Menu>
+      <Menu name="会员产品业绩">
+        <Menus>
+          <Menu name="会员产品业绩" url="/Bonus/HyInvSale/Index"></Menu>
+          <Menu name="健康食品维护" url="/Bonus/InvJksp/Index"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="旧卡激活统计" url="/Bonus/OldCardActiveSummary/Index" ></Menu>
+      <Menu name="个人积分不连续达标" url="/Bonus/GrjfDiscontinuousReachStandard/Index" refTable="yjquerymonth.p1" keyword="复购"></Menu>
+      <Menu name="营销分析">
+        <Menus>
+          <Menu name="各级别人数" url="/Bonus/MonthlyPosHyQty/Index" refTable="yjquerymonth.p1" keyword="级别,晋级"></Menu>
+          <Menu name="复购率" url="/Bonus/MonthlyRepurchaseRate/Index" refTable="yjquerymonth.p1"></Menu>
+          <Menu name="沉睡顾客" url="/Bonus/MonthlySleepingCustomer/Index" refTable="yjquerymonth.p1"></Menu>
+          <Menu name="消费结构" url="/Bonus/ConsumeStructure/Index" refTable="yjquerymonth.s1"></Menu>
+          <Menu name="人均小组业绩" url="/Bonus/GroupPerformancePerCapita/Index" refTable="yjquerymonth.p1"></Menu>
+          <Menu name="新人个人累积分" url="/Bonus/MonthlyNewHyGrljf/Index" refTable="yjquerymonth.p1"></Menu>
+          <Menu name="尾线5星分布" url="/Bonus/MonthlyHyQPos/Index" refTable="yjquerymonth.p1,yjquerymonth.HJ2"></Menu>
+          <Menu name="个人消费积分段" url="/Bonus/MonthlyGrjfRange/Index" refTable="yjquery.mly_s"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="尾线G分析">
+        <Menus>
+          <Menu name="四大系列销售额占比" url="/Bonus/GTailProportionOfCategorySale/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="单品集中" url="/Bonus/GTailSingleProductConcentration/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="业绩预警" url="/Bonus/GTailPerformanceEarlyWarning/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="拉新能力" url="/Bonus/GTailPullNewAbility/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="客单价" url="/Bonus/GTailCustomerUnitPrice/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="复购率" url="/Bonus/GTailRepurchaseRate/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="流失率" url="/Bonus/GTailLossRate/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="合格率" url="/Bonus/GTailQualifiedRate/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="顾客活跃占比" url="/Bonus/GTailProportionOfActiveCustomer/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+          <Menu name="业绩健康度" url="/Bonus/GTailPerformanceHealth/Index" refTable="yjreport.t_gold_tail_report1"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="无下级的活跃不合格5星" url="/Bonus/NoChildActiveUnpassStar/Index" refTable="yjreport.t_review_report1"></Menu>
+      <Menu name="有同级的EDG人数" url="/Bonus/SameLevelQty/Index" refTable="yjreport.t_review_report2"></Menu>
+      <Menu name="R的5星线数量" url="/Bonus/R5StarQty/Index" refTable="yjreport.t_review_report3"></Menu>
+      <Menu name="E的5星线数量" url="/Bonus/E5StarQty/Index" refTable="yjreport.t_review_report4"></Menu>
+      <Menu name="D的5星线数量" url="/Bonus/D5StarQty/Index" refTable="yjreport.t_review_report5"></Menu>
+      <Menu name="用户访问记录" url="/Bonus/UserVisitLog/Index"></Menu>
+    </Menus>
+  </Menu>
+  <Menu name="专卖店资料">
+    <Menus>
+      <Menu name="专卖店资料" url="/Hyzl/Shop/Index"></Menu>
+      <!--<Menu name="专卖店资料过数(报错)" url="/Agent/AgentPass/Index"></Menu>-->
+      <Menu name="按店号查专卖店汇总" url="/Agent/AgentSummary/FirstStep"></Menu>
+      <Menu name="按月份查专卖店汇总" url="/Agent/AgentSummaryByMonth/Index"></Menu>
+      <Menu name="上月库存金额统计" url="/Agent/InvStockMoney/Index"></Menu>
+      <Menu name="联通日结数据">
+        <Menus>
+          <!--<Menu name="联通订单" url="/Unicom/CrmOrders/Index"></Menu>-->
+          <!--<Menu name="日结订单" url="/Unicom/DayOrders/Index"></Menu>-->
+          <Menu name="日结专卖店" url="/Unicom/DayAgent/Index"></Menu>
+        </Menus>
+      </Menu>
+    </Menus>
+  </Menu>
+  <Menu name="订单查询">
+    <Menus>
+      <Menu name="礼券优惠券查询">
+        <Menus>
+          <Menu name="顾客礼券" url="/Sale/QueryGift/Index" refTable="wmb2c.v_gift"></Menu>
+          <Menu name="优惠券查询" url="/Sale/QueryCashGift/Index" refTable="wmb2c.hyzl_cx_gift,wmb2c.hyzl_wxcx_type"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="订单查询">
+        <Menus>
+          <Menu name="上月购货查询" url="/Sale/DistNewQueryOrders/Index" refTable="172_18_2_10.newshop.p_getShopinfoByUserid"></Menu>
+          <Menu name="专卖店未审核查询" url="/Sale/DistNoCheckQry/Index"></Menu>
+          <Menu name="专卖店库存查询" url="/Sale/QueryInvStock/Index"></Menu>
+          <Menu name="办卡网点所报产品查询" url="/Sale/QueryOrdersDetail/Index"></Menu>
+          <Menu name="各产品专卖店报单查询" url="/Sale/QueryShopByInv/Index"></Menu>
+          <Menu name="订货销售实时查询">
+            <Menus>
+              <Menu name="专卖店实时资料" url="/Sale/QueryAgent/Index"></Menu>
+              <!--<Menu name="订货汇总(金额)查询" url="/Sale/OrdersYaHuoSelect00/Index?flag=10&amp;authority=Export"></Menu>
+          <Menu name="订货汇总(产品)查询" url="/Sale/OrdersYaHuoSelect00/Index?flag=11"></Menu>
+          <Menu name="实时订货产品分析" url="/Sale/YahuoAnalyseSelect/Index"></Menu>-->
+              <Menu name="销售汇总(金额)查询" url="/Sale/OrdersYaHuoSelect00/Index?flag=20"></Menu>
+              <Menu name="销售汇总(产品)查询" url="/Sale/OrdersYaHuoSelect00/Index?flag=21"></Menu>
+              <Menu name="订货零售价汇总查询" url="/Sale/OrdersYaHuoSelect00/Index?flag=30"></Menu>
+              <Menu name="实时购货查询" url="/Sale/QueryFuseridOrders/Index" refTable="172_18_2_10.newshop.pw_yjquery_QueryOrdersDetails"></Menu>
+              <Menu name="年度统计查询" url="/Sale/FgsStatsSelect/Index"></Menu>
+              <Menu name="业务员多店购货查询" url="/Sale/QueryManyShop/Index"></Menu>
+              <Menu name="报表分析" url="/Sale/ReportSelect/Index"></Menu>
+              <Menu name="专卖店产品销售情况" url="/Sale/AgentInvSale/Index" refTable="yjquery.p_sales_getDataByAgent,bddata.salesyear"></Menu>
+            </Menus>
+          </Menu>
+        </Menus>
+      </Menu>
+      <Menu name="报表">
+        <Menus>
+          <Menu name="专卖店业绩环比查询" url="/Sale/DistPV01/Index"></Menu>
+          <Menu name="服务中心业绩" url="/Sale/ServiceCenterPerformance/Index"></Menu>
+          <Menu name="双机销售查询" url="/Sale/DualSales/Index"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="月结数据">
+        <Menus>
+          <Menu name="各月订单明细" url="/Sale/MonthlyOrdersToDetail/Index" refTable="yjquerymonth.orders,yjquerymonth.ordersdetail"></Menu>
+        </Menus>
+      </Menu>
+      <Menu name="联通日结数据">
+        <Menus>
+          <!--<Menu name="联通订单" url="/Unicom/CrmOrders/Index"></Menu>-->
+          <Menu name="日结订单" url="/Unicom/DayOrders/Index"></Menu>
+          <Menu name="日结订单明细" url="/Unicom/DayOrdersToDetail/Index"></Menu>
+        </Menus>
+      </Menu>
+    </Menus>
+  </Menu>
+  <Menu name="红宝">
+    <Menus>
+      <Menu name="查询升级人员" url="/Train/QueryHyUpgrade/Index"></Menu>
+      <Menu name="合格双金钻" url="/Train/DoubleGold/Index"></Menu>
+      <Menu name="查询不连续合格名单" url="/Train/QueryNoContinue/Index"></Menu>
+      <Menu name="某期连续合格经理名单" url="/Train/QueryContinueUp/Index"></Menu>
+      <Menu name="按省份查询连续活跃经理" url="/Train/QueryContinueUp/Index1"></Menu>
+      <!--<Menu name="不活跃名单查询(子)" url="/Train/NoActiveContinuously/Index" allUser="true"></Menu>-->
+      <Menu name="按省份查询不连续活跃经理" url="/Train/QueryContinueNoUp/Index2"></Menu>
+      <Menu name="旅游资料输入" url="/Train/ToursInfo/Index"></Menu>
+      <Menu name="查询个人业绩" url="/Train/QueryTours/Index02"></Menu>
+      <Menu name="旅游查询" url="/Train/QueryTours/Index"></Menu>
+      <Menu name="培训管理" url="/Train/PersonTrain/Index"></Menu>
+      <Menu name="培训跟踪(查询店)" url="/Train/QueryAgent/Index"></Menu>
+      <Menu name="培训跟踪(查级别)" url="/Train/QueryGrade/Index"></Menu>
+      <Menu name="红宝业绩查询" url="/Train/Hb/Index"></Menu>
+    </Menus>
+  </Menu>
+  <Menu name="玛丽艳">
+    <Menus>
+      <Menu name="美容积分换购查询" url="/MarieAnne/MaJfHg/Index"></Menu>
+      <Menu name="美容积分汇总查询" url="/MarieAnne/MaJfHgTotal/Index"></Menu>
+      <Menu name="查询玛丽艳业绩" url="/MarieAnne/MlyS/Index" refTable="yjquery.mly_s"></Menu>
+    </Menus>
+  </Menu>
+  <Menu name="基本资料维护">
+    <Menus>
+      <Menu name="产品基本资料维护" url="/BaseData/Inv/Index"></Menu>
+      <Menu name="个人累积分资料维护" url="/BaseData/Ljf/Index"></Menu>
+      <!--<Menu name="添加利保资料" url="/BaseData/LiBao/Add"></Menu>旧系统新增修改分两菜单-->
+      <!--<Menu name="利保资料新增修改" url="/BaseData/ManageLiBao/Index"></Menu>暂不做wxjlatertodo-->
+      <Menu name="限制利保名单" url="/BaseData/FCmonLimit/Index"></Menu>
+      <!--<Menu name="利保资料过数" url="/BaseData/LiBaoPass1/Index"></Menu>不确定做不做wxjtodo-->
+      <Menu name="调差资料维护" url="/BaseData/TiaoCha/Index"></Menu>
+      <Menu name="初步月结查询" url="/BaseData/PreliminaryMonthlyReport/Index"></Menu>
+      <Menu name="初步月结备份" url="/BaseData/PreliminaryMonthlyReportTransfer/Index"></Menu>
+      <Menu name="月结备份" url="/BaseData/MonthlyReportTransfer/Index"></Menu>
+    </Menus>
+  </Menu>
+  <Menu name="短信管理">
+    <Menus>
+      <Menu name="手机号码" url="/Msg/Telephone01/Index"></Menu>
+      <!--<Menu name="通告短信" url="/Msg/Message01/Index"></Menu>
+      <Menu name="单条短信发送" url="/Msg/MessageSingle/Index"></Menu>-->
+      <Menu name="模板短信发送" url="/Msg/TemplateMessage/Index"></Menu>
+      <!--<Menu name="业务员短信补发" url="/Msg/MessageSingle1/Index"></Menu>先不放出,先做短信可定义模版
+      <Menu name="邮局短信" url="/Msg/MessagePostoffice/Index"></Menu>-->
+      <!--再测试之后再开放,还有通告短信未测试wxjtodo-->
+    </Menus>
+  </Menu>
+  <Menu name="项目外包">
+    <Menus>
+      <Menu name="项目需求说明表" url="/ProjOut/ProjectRequirement/Index"></Menu>
+      <Menu name="费用结算表" url="/ProjOut/Payoff/Index"></Menu>
+      <!--<Menu name="费用结算表(全部)" url="/ProjOut/AllPayoff/Index"></Menu>-->
+      <Menu name="汇总记录表" url="/ProjOut/SummaryRecord/Index"></Menu>
+      <Menu name="会议汇总表" url="/ProjOut/MeetingSummary/Index"></Menu>
+      <Menu name="会议汇总记录表" url="/ProjOut/MeetingSummaryRecord/Index"></Menu>
+      <Menu name="市场调查汇总记录表" url="/ProjOut/MarketSurveySummary/Index"></Menu>
+      <Menu name="导出全部" url="/ProjOut/AllExport/Index"></Menu>
+      <Menu name="财务检查">
+        <Menus>
+          <Menu name="会议汇总表" url="/ProjOut/MeetingSummary2/Index"></Menu>
+          <Menu name="市场调查汇总记录表" url="/ProjOut/MarketSurveySummary2/Index"></Menu>
+          <Menu name="导出全部" url="/ProjOut/AllExportForCheck/Index"></Menu>
+        </Menus>
+      </Menu>
+    </Menus>
+  </Menu>
+</Menus>

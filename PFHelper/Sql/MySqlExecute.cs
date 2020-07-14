@@ -13,7 +13,7 @@ namespace Perfect
     /// <summary>
     /// DataBase 的摘要说明。(NuGet安装MySql.Data)
     /// </summary>
-    public class MySqlBase
+    public class MySqlBase : IDisposable
     {
         //protected string _connectionstring = "data source=10.0.0.11;initial catalog=yjquery;persist security info=False;user id=sa;password=perfect;Connect Timeout=2000";// ConfigurationManager.ConnectionStrings["yjquery"].ConnectionString;
         //protected string _connectionstring = ConfigurationManager.ConnectionStrings["DefaultConnectionString"].ConnectionString;
@@ -41,10 +41,11 @@ namespace Perfect
                 {
                     _connectionstring = _connString;
                     _sqlconnection.ConnectionString = _connectionstring;
-                    if (_sqlconnection.State != ConnectionState.Open)
-                    {
-                        _sqlconnection.Open();
-                    }
+                    OpenConn();
+                    //if (_sqlconnection.State != ConnectionState.Open)
+                    //{
+                    //    _sqlconnection.Open();
+                    //}
                     break;
                 }
                 catch (Exception e)
@@ -64,7 +65,8 @@ namespace Perfect
 
             if (_sqlconnection.State == ConnectionState.Open)
             {
-                _sqlconnection.Close();
+                CloseConn();
+                //_sqlconnection.Close();
             }
             _sqlconnection.ConnectionString = _connectionstring;
             _sqlconnection.Open();
@@ -73,11 +75,25 @@ namespace Perfect
         public void OpenConn()
         {
             if (this._sqlconnection.State == ConnectionState.Closed)
-            { this._sqlconnection.Open(); }
+            {
+                this._sqlconnection.Open();
+                SqlConnCounter.Add(_sqlconnection.ConnectionString);
+            }
         }
         public void CloseConn()
         {
+            SqlConnCounter.Subtract(_sqlconnection.ConnectionString);
             this._sqlconnection.Close();
+        }
+        public void Dispose()
+        {
+            if (_sqlconnection.State == ConnectionState.Open)
+            {
+                CloseConn();
+                //_sqlconnection.Close();
+                _sqlconnection.Dispose();
+                _sqlconnection = null;
+            }
         }
     }
     #endregion
@@ -183,14 +199,16 @@ namespace Perfect
                 ParameterArray = sqlCmd.Parameters;
                 if (autoClose)
                 {
-                    this._sqlconnection.Close();
+                    CloseConn();
+                    //this._sqlconnection.Close();
                 }
                 return ds.Tables[0];
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -213,13 +231,15 @@ namespace Perfect
                 {
                     robj = null;
                 }
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return robj;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return robj;
             }
         }
@@ -240,7 +260,8 @@ namespace Perfect
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -257,7 +278,8 @@ namespace Perfect
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return null;
             }
         }
@@ -277,14 +299,16 @@ namespace Perfect
                 //将参数导出
                 if (autoClose)
                 {
-                    this._sqlconnection.Close();
+                    CloseConn();
+                    //this._sqlconnection.Close();
                 }
                 return true;
             }
             catch (System.Exception ex)
             {
                 Error = ex;
-                this._sqlconnection.Close();
+                CloseConn();
+                //this._sqlconnection.Close();
                 return false;
             }
         }

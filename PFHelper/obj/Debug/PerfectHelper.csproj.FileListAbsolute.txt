@@ -80,6 +80,7 @@ E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\BouncyCastle.Crypto.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\editsuite.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Google.Protobuf.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\ICSharpCode.SharpZipLib.dll
+E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\JWT.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\MySql.Data.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Newtonsoft.Json.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Renci.SshNet.dll
@@ -91,7 +92,10 @@ E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.WebPages.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Microsoft.Web.Infrastructure.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.WebPages.Deployment.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Google.Protobuf.xml
+E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\JWT.pdb
+E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\JWT.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\MySql.Data.xml
+E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Newtonsoft.Json.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Renci.SshNet.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.Mvc.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.Razor.xml
@@ -99,6 +103,6 @@ E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.WebPages.Razor.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.WebPages.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\Microsoft.Web.Infrastructure.xml
 E:\svn\SaveDbReport\PFHelper\PFHelper\bin\Debug\System.Web.WebPages.Deployment.xml
-E:\svn\SaveDbReport\PFHelper\PFHelper\obj\Debug\PerfectHelper.csprojResolveAssemblyReference.cache
 E:\svn\SaveDbReport\PFHelper\PFHelper\obj\Debug\PerfectHelper.dll
 E:\svn\SaveDbReport\PFHelper\PFHelper\obj\Debug\PerfectHelper.pdb
+E:\svn\SaveDbReport\PFHelper\PFHelper\obj\Debug\PerfectHelper.csprojResolveAssemblyReference.cache

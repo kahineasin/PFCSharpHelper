@@ -33,11 +33,13 @@ E:\my_svn_proj\PFHelper\PFWinformHelper\bin\Debug\BouncyCastle.Crypto.dll
 E:\my_svn_proj\PFHelper\PFWinformHelper\bin\Debug\MySql.Data.xml
 E:\my_svn_proj\PFHelper\PFWinformHelper\bin\Debug\Google.Protobuf.xml
 E:\my_svn_proj\PFHelper\PFWinformHelper\bin\Debug\Renci.SshNet.xml
+E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\PFWinformHelper.dll.config
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\PFWinformHelper.dll
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\PFWinformHelper.pdb
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\Newtonsoft.Json.dll
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\PerfectHelper.dll
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\Aspose.Cells.dll
+E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\JWT.dll
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\ICSharpCode.SharpZipLib.dll
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\System.Web.Mvc.dll
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\Aspose.Words.dll
@@ -55,6 +57,8 @@ E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\System.Web.WebPages.Deplo
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\PerfectHelper.pdb
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\Newtonsoft.Json.pdb
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\Newtonsoft.Json.xml
+E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\JWT.pdb
+E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\JWT.xml
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\System.Web.Mvc.xml
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\MySql.Data.xml
 E:\svn\SaveDbReport\PFHelper\PFWinformHelper\bin\Debug\System.Web.Razor.xml

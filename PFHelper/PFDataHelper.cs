@@ -148,6 +148,12 @@ namespace Perfect
         public static PFCmonth SysMinMonth;
 
         /// <summary>
+        /// 系统的所有菜单(便于重用)
+        /// </summary>
+
+        public static PFWebMenu SysWebMenu = null;
+
+        /// <summary>
         /// 小数精确度默认4位(常用于除法的小数保留位数)
         /// </summary>
         public static int DecimalPrecision = 4;
@@ -9893,6 +9899,14 @@ Date:{1}
         /// 年月:如201801
         /// </summary>
         public string Ym { get { return _ym; } set { _ym = value; if (_ym != null && _ym.Length > 5) { _cmonth = _ym.Insert(4, "."); } } }
+        public PFCmonth AddMonths(int month)
+        {
+            return new PFCmonth { Cmonth = PFDataHelper.CMonthAddMonths(Cmonth, month) };
+        }
+        public DateTime ToDateTime()
+        {
+            return PFDataHelper.CMonthToDate(Cmonth);
+        }
     }
     /// <summary>
     /// 迁移项
@@ -9905,12 +9919,13 @@ Date:{1}
         private Func<DataTable, DataTable> _dataRender = null;
         private string _srcConnName = null;
         //private string _dstConnName = "dayConnection";
-        private string _dstConnName =null;
+        private string _dstConnName = null;
         public string SrcConn { get; set; }
         //public string SrcConnName { get; set; }
-        public string SrcConnName {
+        public string SrcConnName
+        {
             //get { return _srcConnName; }
-            set { _srcConnName = value;SrcConn = ConfigurationManager.ConnectionStrings[value].ConnectionString; }
+            set { _srcConnName = value; SrcConn = ConfigurationManager.ConnectionStrings[value].ConnectionString; }
         }
         public PFSqlType? SrcSqlType { get; set; }
         public string DstConn { get; set; }
@@ -10001,5 +10016,131 @@ Date:{1}
         /// 经
         /// </summary>
         public decimal Longitude { get; set; }
+    }
+    public class PFWebMenu : TreeListItem<PFWebMenu>, ITreeListItem
+    {
+        public PFWebMenu() { }
+        public PFWebMenu(System.Xml.XmlNode node)
+        {
+            Menuname = node.Attributes["name"].Value;
+            //if (node.Attributes["refTable"] != null) { RefTable = node.Attributes["refTable"].Value; }
+            //if (node.Attributes["keyword"] != null) { Keyword = node.Attributes["keyword"].Value; }
+            if (node.Attributes["url"] != null)
+            {
+                Url = node.Attributes["url"].Value;
+                AuthorizeCode = string.Format("YJQ{0}", Url.Split(new char[] { '?' }, StringSplitOptions.RemoveEmptyEntries)[0].Replace("/", "_"));
+            }
+            if (node.Attributes["icon"] != null)
+            {
+                Icon = node.Attributes["icon"].Value;
+            }
+            //if (node.Attributes["allUser"] != null && node.Attributes["allUser"].Value == "true")
+            //{
+            //    AllUser = true;
+            //}
+        }
+        public int Id { get; set; }
+        public string Menuname { get; set; }
+        public string Url { get; set; }
+        public string AuthorizeCode { get; set; }
+        public int Parent { get; set; }
+        public string Icon { get; set; }//图标--by wxj20180621
+        //public List<WebMenu> MenuItems { get; set; }
+        public Boolean IsHidden { get; set; }
+
+        public object Data { get; set; }
+
+        public IList GetChildren()
+        {
+            return Children;
+        }
+
+        public static PFWebMenu GetMoudleAndMenu(bool filterByAuthor = true)
+        {
+            //string xmlfile = Path.Combine(HttpRuntime.AppDomainAppPath, "Configs/XmlConfig/SysMenu.xml");
+            string xmlfile = Path.Combine(PFDataHelper.BaseDirectory, "Configs/XmlConfig/SysMenu.xml");
+            XmlDocument doc = new XmlDocument();
+            doc.Load(xmlfile);
+
+            var modules = doc.ChildNodes[1].ChildNodes;//第一层Menu即为Module
+            var result = new PFWebMenu { Menuname = "Root", Children = new List<PFWebMenu>() };
+
+            foreach (XmlNode module in modules)
+            {
+                var menus = new List<PFWebMenu>();
+                var nodes = module.SelectNodes("Menus/Menu");
+                if (nodes != null && nodes.Count > 0)
+                {
+                    DoSetMenu(ref menus, nodes, filterByAuthor);
+                }
+                result.Children.Add(new PFWebMenu { Menuname = module.Attributes["name"].Value, Children = menus });
+                //if (IsShowModule(menus))
+                //{
+                //    result.Add(module.Attributes["name"].Value, menus);
+                //}
+            }
+            return result;
+        }
+        //private static void SetMenu(ref List<PFWebMenu> list, XmlNodeList nodes, bool filterByAuthor = true)
+        //{
+        //    DoSetMenu(ref list, nodes, filterByAuthor);
+        //    ////过滤末级不是功能的部分(因为没权限)--benjamin20190709
+        //    //list = new PFWebMenu { Children = list }.FilterByLeaf(a => !PFDataHelper.StringIsNullOrWhiteSpace(((PFWebMenu)a.Data).Url)).Children;
+        //}
+
+        private static void DoSetMenu(ref List<PFWebMenu> list, XmlNodeList nodes, bool filterByAuthor = true)
+        {
+            //list = new List<TreeListItem>();
+            Dictionary<string, FuncAuthority> funcAuthorities = null;
+
+            //if (filterByAuthor)
+            //{
+            //    funcAuthorities = FormsAuth.GetFuncAuthorities();
+            //}
+            try
+            {
+                foreach (XmlNode node in nodes)
+                {
+                    if ((!PFDataHelper.IsCompilationDebug)
+                        && node.Attributes["debug"] != null && node.Attributes["debug"].Value == "true"
+                        )
+                    {
+                        continue;
+                    }
+                    var item = new PFWebMenu(node);
+                    //item.Data = new MatchWebMenu();
+                    //var menu = new PFWebMenu(node);
+                    //item.Data = menu;
+
+                    //if (menu.Url != null)
+                    //{
+                    //    //组成权限系统的功能码,格式如:	YJQ_Hyzl_YWYZL_FirstStep
+                    //    var authorizeCode = string.Format("YJQ{0}", menu.Url.Split(new char[] { '?' }, StringSplitOptions.RemoveEmptyEntries)[0].Replace("/", "_"));
+
+                    //    if (filterByAuthor && (funcAuthorities == null || (!funcAuthorities.Any(a => a.Key == authorizeCode)))
+                    //        && (!menu.AllUser)
+                    //        )
+                    //    {
+                    //        continue;
+                    //    }
+                    //    //menu.Url = node.Attributes["url"].Value;
+                    //}
+
+                    var children = node.SelectNodes("Menus/Menu");
+                    if (children != null && children.Count > 0)
+                    {
+                        var cList = new List<PFWebMenu>();
+                        DoSetMenu(ref cList, children, filterByAuthor);//注意,虽然children不为空,但并不能保证list也不为空,因为可能被权限过滤了
+                        if (cList.Count > 0) { item.Children = cList; }
+                    }
+                    list.Add(item);
+                }
+                //list=new TreeListItem { Children= list }.FilterByLeaf(a => !PFDataHelper.StringIsNullOrWhiteSpace(((WebMenu)a.Data).Url)).Children;
+            }
+            catch (Exception e)
+            {
+                PFDataHelper.WriteError(e);
+            }
+        }
     }
 }

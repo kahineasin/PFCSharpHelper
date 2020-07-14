@@ -1167,6 +1167,37 @@ select count(*) from #dsellerno1
                 );
             Assert.IsTrue(b);
         }
+        [TestMethod]
+        public void TestJWT()
+        {
+            var payload = new Dictionary<string, object>
+            {
+                { "resource",new { dashboard=7} },
+                { "params",new { } },
+                { "email","wxj@perfect99.com" },
+                { "first_name","肖均" },
+                { "last_name","吴" },
+                { "exp", DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds() }//到期时间
+            };
+            string secret = "9f0b293e2a66003d8ab39a6f26431be3798cdd1912975be8a42b9be6c552248c";
+            //string secret = "9bcd6721912dc3419f4eea3acb1db7f432a106c34dc8a3c44af9b5b12925aa42";//登陆密钥
+            //生成JWT
+            string JWTString = JwtHelper.CreateJWT(payload, secret);
+
+            //校验JWT
+            string ResultMessage;//需要解析的消息
+            string Payload;//获取负载
+            Dictionary<string, object> resultPayLoad = null;
+
+            var b = JwtHelper.ValidateJWT(JWTString, out Payload, out ResultMessage, secret);
+            if (b)
+            {
+                resultPayLoad = JsonConvert.DeserializeObject<Dictionary<string, object>>(Payload);
+            }
+            Assert.IsTrue(b
+                &&payload["email"].ToString()== resultPayLoad["email"].ToString()
+                );
+        }
         #region Private
         /// <summary>
         /// 获得各种类型封装的object,便于测试 ObjectTo...()方法

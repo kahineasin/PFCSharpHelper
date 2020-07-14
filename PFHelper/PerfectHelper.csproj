@@ -53,12 +53,17 @@
       <HintPath>packages\ICSharpCode.SharpZipLib.dll.0.85.4.369\lib\net20\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="JWT, Version=7.0.0.0, Culture=neutral, PublicKeyToken=6f98bca0f40f2ecf, processorArchitecture=MSIL">
+      <HintPath>packages\JWT.7.2.1\lib\net46\JWT.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MySql.Data, Version=8.0.19.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\..\SaveDbReport\packages\MySql.Data.8.0.19\lib\net452\MySql.Data.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\package\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\..\SaveDbReport\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
@@ -93,6 +98,7 @@
     <Compile Include="Exporter\XlsxExport1048576.cs" />
     <Compile Include="Exporter\XlsExport65535.cs" />
     <Compile Include="Exporter\XlsxEPPlusExport.cs" />
+    <Compile Include="JwtHelper.cs" />
     <Compile Include="PFExcelHelper.cs" />
     <Compile Include="PFMqConfig.cs" />
     <Compile Include="PFMqHelper.cs" />
@@ -146,6 +152,7 @@
     <Content Include="Content\PFTab\tab.css" />
     <Content Include="Content\PFTab\tab.js" />
     <Content Include="Lib\Aspose.Cells.dll" />
+    <Content Include="XmlConfig\SysMenu.xml" />
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Resources\loading3.gif" />

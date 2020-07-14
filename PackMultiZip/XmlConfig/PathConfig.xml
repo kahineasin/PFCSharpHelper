@@ -10,5 +10,5 @@
   <Path excludeFolder=".git">D:\eclipse_workspace_receiveUnicom\receiveUnicom</Path>
   <Path>E:\mypage\SellGirl\SellGirl.Web</Path>
   <Path>D:\wxj\releaseProject</Path>
-  <Path>E:\my_proj\python</Path>
+  <Path excludeFolder=".git">E:\my_proj\python</Path>
 </Paths>
