@@ -101,6 +101,16 @@ namespace Perfect
             }
         }
         /// <summary>
+        /// 网站域名(有必要可以带端口),在登陆页转换到域名地址(便于登陆metabase)
+        /// </summary>
+        public static string SiteDomain
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["SiteDomain"];
+            }
+        }
+        /// <summary>
         /// 如果收发邮件不设置超时，发现PFListenEmailTask会因为超时而卡在Connect_Click后面
         /// 默认20,000毫秒
         /// </summary>
