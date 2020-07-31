@@ -1240,6 +1240,21 @@ namespace Perfect
             var r = (actual / plan) * 100;
             return r == null ? null : System.Decimal.Round(r.Value, 2).ToString() + " %";
         }
+        #region Decimal
+        /// <summary>
+        /// 除法
+        /// </summary>
+        /// <param name="actual"></param>
+        /// <param name="plan"></param>
+        /// <returns></returns>
+        public static decimal? Division(this decimal dividend, decimal? divisor)
+        {
+            if (divisor == null || divisor == 0) { return null; }
+            var r = dividend / divisor;
+            if (r == null) { return null; }
+            return System.Decimal.Round(r.Value, DecimalPrecision);
+        }
+        #endregion
 
         /// <summary>
         /// NameValueCollection转T类型
@@ -1762,6 +1777,10 @@ namespace Perfect
         {
             return SetColumnProperty(column, "title", title);
         }
+        public static DataTable SetColumnVisible(this DataTable dt, string columnName, bool visible)
+        {
+            return SetColumnProperty(dt, columnName, "visible", visible);
+        }
         public static DataTable SetColumnWidth(this DataTable dt, string columnName, string width)
         {
             return SetColumnProperty(dt, columnName, "width", width);
@@ -2060,6 +2079,59 @@ namespace Perfect
             GCCollect();
             //GC.Collect();
         }
+        public static void ClearList(IList array)
+        {
+            array = null;
+            GCCollect();
+            //GC.Collect();
+        }
+        public static void ClearObject(Object array)
+        {
+            if (array is IDictionary)
+            {
+                ClearDict(array as IDictionary);
+            }
+            array = null;
+            GCCollect();
+            //GC.Collect();
+        }
+        public static void ClearDict(IDictionary array)
+        {
+            var values = (array as IDictionary).Values;
+            if (values != null)
+            {
+                foreach (var v in values)
+                {
+                    if (v is IDictionary)
+                    {
+                        ClearDict(v as IDictionary);
+                    }
+                    else if (v is IDisposable)
+                    {
+                        (v as IDisposable).Dispose();
+                    }
+                }
+            }
+            array.Clear();
+        }
+        //public static void ClearDict<TKey,TValue>(Dictionary<TKey,TValue> array)
+        //{
+        //        foreach (var i in array)
+        //        {
+        //            if (i.Value)
+        //        }
+        //    if (array is Dictionary)
+        //    {
+        //        foreach (var i in (array as IDictionary))
+        //        {
+        //            if (i)
+        //        }
+        //        (array as IDictionary).Clear()
+        //    }
+        //    array = null;
+        //    GCCollect();
+        //    //GC.Collect();
+        //}
         #endregion DataTable
 
         #region Tree
@@ -2476,6 +2548,7 @@ namespace Perfect
                 case "System.String":
                     return "string";
                 case "System.DateTime":
+                case "MySql.Data.Types.MySqlDateTime":
                     //return "datetime";
                     return "DateTime";//转string后必需和FieldSet.xml上的对应
                 case "System.Guid":
@@ -4647,9 +4720,11 @@ namespace Perfect
                         }
                         header.Add(dictionary);
                     }
-                    modelConfig.Dispose();
-                    modelConfig = null;
-                    GCCollect();
+                    if (modelConfig != null)
+                    {
+                        modelConfig.Dispose();
+                        modelConfig = null;
+                    }
                     //GC.Collect();
                 }
                 else//head不为null时
@@ -5440,29 +5515,53 @@ string.Join("\r\n", errors.ToArray())
         {
 
         }
+        public PFModelConfig(PFModelConfig modelConfig)
+        {
+            Apply(modelConfig);
+        }
         public bool Equals(PFModelConfig obj)
         {
             return this.PropertyName == obj.PropertyName && this.DataSet == obj.DataSet && this.FieldName == obj.FieldName;
         }
 
+        public PFModelConfig Apply( PFModelConfig src)
+        {
+            #region 不用反射性能更好
+            this.PropertyName = src.PropertyName;
+            this.DataSet = src.DataSet;
+            this.FieldId = src.FieldId;
+            this.FieldName = src.FieldName;
+            this.LowerFieldName = src.LowerFieldName;
+            this.FieldText = src.FieldText;
+            this.FieldType = src.FieldType;
+            this.Precision = src.Precision;
+            this.FieldSqlLength = src.FieldSqlLength;
+            this.FieldWidth = src.FieldWidth;
+            this.Visible = src.Visible;
+            this.Required = src.Required;
+            return this;
+            #endregion
+            //return TransExpV2<PFModelConfig, PFModelConfig>.Trans(this);
+        }
         public PFModelConfig TClone()
         {
             #region 不用反射性能更好
-            return new PFModelConfig
-            {
-                PropertyName = this.PropertyName,
-                DataSet = this.DataSet,
-                FieldId = this.FieldId,
-                FieldName = this.FieldName,
-                LowerFieldName = this.LowerFieldName,
-                FieldText = this.FieldText,
-                FieldType = this.FieldType,
-                Precision = this.Precision,
-                FieldSqlLength = this.FieldSqlLength,
-                FieldWidth = this.FieldWidth,
-                Visible = this.Visible,
-                Required = this.Required
-            };
+            return new PFModelConfig().Apply( this);
+            //return new PFModelConfig
+            //{
+            //    PropertyName = this.PropertyName,
+            //    DataSet = this.DataSet,
+            //    FieldId = this.FieldId,
+            //    FieldName = this.FieldName,
+            //    LowerFieldName = this.LowerFieldName,
+            //    FieldText = this.FieldText,
+            //    FieldType = this.FieldType,
+            //    Precision = this.Precision,
+            //    FieldSqlLength = this.FieldSqlLength,
+            //    FieldWidth = this.FieldWidth,
+            //    Visible = this.Visible,
+            //    Required = this.Required
+            //};
             #endregion
             //return TransExpV2<PFModelConfig, PFModelConfig>.Trans(this);
         }
@@ -5703,7 +5802,9 @@ string.Join("\r\n", errors.ToArray())
     #region SqlHelper
     public class SqlCreateTableItem : PFModelConfig
     {
-
+        public SqlCreateTableItem() { }
+        public SqlCreateTableItem(PFModelConfig modelConfig):base(modelConfig)
+        { }
     }
     public class SqlCreateTableCollection : List<SqlCreateTableItem>// Dictionary<string, PFModelConfig>
     {
@@ -5771,20 +5872,29 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
         }
         public string GetFieldTypeString(PFModelConfig m)
         {
+            var typeString=PFDataHelper.GetStringByType(m.FieldType);
             string r = "";
-            if (m.FieldType == typeof(int))
+            if (m.FieldType == typeof(int)
+                || typeString=="long"||typeString=="int"
+                )
             {
-                r = string.Format("int");//int(11) ?后面不知道要不要长度
+                //r = string.Format("int");//int(11) ?后面不知道要不要长度
+                r = m.FieldSqlLength == null
+                    ? string.Format("int")
+                    : string.Format("int({0})", m.FieldSqlLength);//int(11) ?后面不知道要不要长度
             }
             else if (m.FieldType == typeof(string))
             {
                 r = string.Format("varchar({0})", m.FieldSqlLength ?? 100);//int(11) ?后面不知道要不要长度
             }
-            else if (m.FieldType == typeof(decimal))
+            else if (m.FieldType == typeof(decimal)
+                ||typeString== "decimal"
+                )
             {
                 r = string.Format("decimal({0},{1})", m.FieldSqlLength ?? 18, m.Precision ?? 2);
             }
-            else if (m.FieldType == typeof(DateTime))
+            else if (m.FieldType == typeof(DateTime)
+                ||typeString== "DateTime")
             {
                 r = "datetime";
             }
@@ -5795,6 +5905,10 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
             if (PrimaryKey != null && PrimaryKey.Contains(m.FieldName))
             {
                 r += " not null";
+            }
+            if (m.FieldText != null)
+            {
+                r += " COMMENT '" + m.FieldText + "'";
             }
             return r;
         }
@@ -6161,12 +6275,15 @@ where rownumber between {1} and {2}
         //}
         protected string GetFormatValue(object val, Type vtype)
         {
+            string typeString = "";
+            if (vtype != null) { typeString = PFDataHelper.GetStringByType(vtype); }
             if (val == null
                 || val == DBNull.Value //benjamin20190910
                 )
             {
                 if (vtype == typeof(decimal) || vtype == typeof(decimal?) || vtype == typeof(int) || vtype == typeof(int?) || vtype == typeof(DateTime) || vtype == typeof(DateTime?) || vtype == typeof(bool) || vtype == typeof(bool?)
                     || vtype == typeof(double) || vtype == typeof(double?) || vtype == typeof(System.Type)
+                    ||typeString=="int"||typeString=="decimal" || typeString == "long" || typeString == "DateTime"
                     )
                 {
                     return " null ";
@@ -6194,6 +6311,12 @@ where rownumber between {1} and {2}
                 var list = val as IList<string>;
                 return string.Format(" '{0}' ", string.Join(",", list.ToArray()));
             }
+            if(nonnullType == typeof(MySql.Data.Types.MySqlDateTime))
+            //if(val is MySql.Data.Types.MySqlDateTime)
+            {
+                return string.Format(" '{0}' ", ((MySql.Data.Types.MySqlDateTime)val).Value.ToString(PFDataHelper.DateFormat));
+            }
+
             return string.Format(" '{0}' ", val);
         }
     }
@@ -9954,6 +10077,14 @@ Date:{1}
         //public DayTableEnum? DstTable { get; set; }
         //public string DstTableName { get { return DstTable.HasValue ? DstTable.ToString() : null; } }
         public string DstTableName { get; set; }
+        /// <summary>
+        /// 目标表主键(用于目标表不存在时生成表)
+        /// </summary>
+        public string[] DstTablePrimaryKeys { get; set; }
+        /// <summary>
+        /// 目标表备注(用于目标表不存在时生成表)
+        /// </summary>
+        public Dictionary<string,string> DstTableColumnComment { get; set; }
         public string ProcedureName { get; set; }
         //public Action<SqlInsertCollection> BeforeInsertAction { get; set; }
         public Action<BaseSqlUpdateCollection> BeforeInsertAction { get; set; }
@@ -9962,7 +10093,7 @@ Date:{1}
         /// 转移数据之后(执行存储过程之前)的操作(如转Json,根据增量表更新主表等)
         /// </summary>
         //public Action<DbReportService> AfterTransferAction { get; set; }
-        public Action AfterTransferAction { get; set; }
+        public Action<PFSqlTransferItem> AfterTransferAction { get; set; }
         ///// <summary>
         ///// 有sql的where条件(pay_finish_time >= '2019-04-01' and pay_finish_time 小于等于 '2019-05-01')
         ///// </summary>
@@ -10007,6 +10138,11 @@ Date:{1}
         /// 有对应的增量表
         /// </summary>
         public bool HasTableChange { get; set; }
+
+        /// <summary>
+        /// 为了保存一些常量,便于在AfterTransferAction 等方法里使用
+        /// </summary>
+        public Dictionary<string,object> ViewData { get; set; }
     }
 
     public enum PFSqlType

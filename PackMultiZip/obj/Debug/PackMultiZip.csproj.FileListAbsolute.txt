@@ -71,3 +71,7 @@ E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\System.Web.WebPages.xml
 E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\Microsoft.Web.Infrastructure.xml
 E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\System.Web.WebPages.Deployment.xml
 E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\Ubiety.Dns.Core.dll
+E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\JWT.dll
+E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\JWT.pdb
+E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\JWT.xml
+E:\svn\SaveDbReport\PFHelper\PackMultiZip\bin\Debug\Newtonsoft.Json.xml

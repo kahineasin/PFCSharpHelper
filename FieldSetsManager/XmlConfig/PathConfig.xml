@@ -9,6 +9,9 @@
   <PerfectLife>
     <Path>E:\svn\PefectLife_66\Perfect\Web2\Configs\XmlConfig\FieldSets.xml</Path>
   </PerfectLife>
+  <SaveDbReport>
+    <Path>E:\svn\SaveDbReport\SaveDbReport\SaveDbReport\XmlConfig\FieldSets.xml</Path>
+  </SaveDbReport>
   <YjQuery>
   </YjQuery>
 </Systems>

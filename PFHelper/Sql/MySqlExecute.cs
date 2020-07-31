@@ -475,7 +475,8 @@ namespace Perfect
                     var b = ExecuteSql(sb.ToString(), false);
                     if (!b)
                     {
-                        rdr.Close();
+                        CloseReader(rdr);
+                        //rdr.Close();
                         CloseConn();
                         return false;
                     }

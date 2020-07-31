@@ -12,6 +12,7 @@ using System.Text;
 using System.Reflection;
 using System.Linq;
 using System.Net;
+using MySql.Data.Types;
 
 namespace PerfectHelperTest
 {
@@ -1197,6 +1198,51 @@ select count(*) from #dsellerno1
             Assert.IsTrue(b
                 &&payload["email"].ToString()== resultPayLoad["email"].ToString()
                 );
+        }
+
+        /// <summary>
+        /// 表是否包含列/存在列
+        /// </summary>
+        [TestMethod]
+        public void TestTableHasColumn()
+        {
+            var sMonDate = new DateTime(2008, 1, 1);
+            var eMonDate = new DateTime(2020, 6, 1);
+            var monRange = new DateRange(sMonDate, eMonDate);
+            List<PFSqlTransferItem> transferList = new List<PFSqlTransferItem>();
+
+            foreach (var i in monRange.GetPerMonthStart())
+            {
+                var SrcConn = string.Format("data source=10.0.0.11;initial catalog=yjquery{0};persist security info=False;user id=sa;password=perfect;Connect Timeout=2000", PFDataHelper.DateToYM(i));
+                var sql = new ProcManager(SrcConn);
+                var r =PFDataHelper.ObjectToInt( sql.QuerySingleValue(string.Format(@"
+if not exists(	select top 1 * from  [yjquery{0}].dbo.syscolumns where id in(
+	  select object_id('yjquery{0}.dbo.hyzl')  
+	  ) and name='accmon' )
+	  begin
+		select 1
+		end
+else
+	begin 
+	 select 2
+	end
+", PFDataHelper.DateToYM(i))));
+
+                if (r == 2)
+                {
+                    throw new Exception(i.ToString());
+                }
+            }
+
+        }
+
+        [TestMethod]
+        public void TestTypeName()
+        {
+            //var aa = (typeof(DateTime)).Name;
+            //var aa = (typeof(MySqlDateTime)).Name; //MySqlDateTime
+            //var aa = (typeof(MySqlDateTime)).ToString();
+            var aa = (typeof( MySqlDateTime)).ToString();
         }
         #region Private
         /// <summary>

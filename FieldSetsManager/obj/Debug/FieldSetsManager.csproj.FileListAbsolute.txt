@@ -105,3 +105,7 @@ E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\System.Web.WebPages.xml
 E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\Microsoft.Web.Infrastructure.xml
 E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\System.Web.WebPages.Deployment.xml
 E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\Ubiety.Dns.Core.dll
+E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\JWT.dll
+E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\JWT.pdb
+E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\JWT.xml
+E:\svn\SaveDbReport\PFHelper\FieldSetsManager\bin\Debug\Newtonsoft.Json.xml
