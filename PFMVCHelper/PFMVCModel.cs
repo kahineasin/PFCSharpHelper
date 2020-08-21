@@ -349,6 +349,8 @@ namespace Perfect
             //jsonSerizlizerSetting.ContractResolver = new CamelCasePropertyNamesContractResolver();
             ////设置日期的格式为：yyyy-MM-dd
             //jsonSerizlizerSetting.DateFormatString = "yyy-MM-dd";//Newtonsoft.Json, Version=6.0.0.0 才支持此属性
+
+            jsonSerizlizerSetting.Converters.Add(new LongDateTimeConvert());
             var json = JsonConvert.SerializeObject(Data, Formatting.None, jsonSerizlizerSetting);
             response.Write(json);
         }

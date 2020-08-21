@@ -189,7 +189,8 @@ namespace Perfect
             //获取TResult的类型实例  反射的入口
             Type t = typeof(T);
             //获得TResult 的所有的Public 属性 并找出TResult属性和DataTable的列名称相同的属性(PropertyInfo) 并加入到属性列表 
-            Array.ForEach<PropertyInfo>(t.GetProperties(), p => {
+            Array.ForEach<PropertyInfo>(t.GetProperties(), p =>
+            {
                 if (columnTextNameDict == null || columnTextNameDict.Values.Contains(p.Name))
                 {
                     prDict.Add(p.Name, p);
@@ -271,5 +272,24 @@ namespace Perfect
             }
             return oblist;
         }
+    }
+
+    /// <summary>
+    /// Excel列对应的列号,便于对应Excel找列序号
+    /// 注意虽然excel中序号是从1开始,但Cells[y,x]中xy都是从0开始的
+    /// </summary>
+    public static class PFExcelX
+    {
+        public static int A = 0;
+        public static int B = 1;
+        public static int C = 2;
+        public static int D = 3;
+        public static int E = 4;
+        public static int F = 5;
+        public static int G = 6;
+        public static int H = 7;
+        public static int I = 8;
+        public static int J = 9;
+        public static int K = 10;
     }
 }

@@ -172,6 +172,11 @@ namespace Perfect.MVC
         {
             _columns.Clear();
         }
+        public virtual void SetColumn(string dataIndex, Action<PFGridColumn> action)
+        {
+            var c = _columns.FirstOrDefault(a => a.DataIndex == dataIndex);
+            if (c != null) { action(c); }
+        }
 
         private void AppendHeader(PFGridMultiHeader p, StoreColumn a, bool generateColumn = true)
         {

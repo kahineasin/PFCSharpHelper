@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Data.Common;
 using System.Collections;
+using System.Linq;
 
 namespace Perfect
 {
@@ -124,6 +125,9 @@ namespace Perfect
             }
         }
         #region 超时设置
+        /// <summary>
+        /// 大数据时的超时时间,25小时,单位秒
+        /// </summary>
         public const int HugeCommandTimeOut = 90000;//drds:900最大; 999999; //3600大量数据时的超时时间--benjamin 20190814
         public int CommandTimeOut
         {
@@ -312,7 +316,158 @@ namespace Perfect
                 return false;
             }
         }
+        public int ExecuteSqlInt(string sqlstr, bool autoClose = true)
+        {
+            sqlCmd.Connection = this._sqlconnection;
+            OpenConn();
+            sqlCmd.CommandType = CommandType.Text;
+            sqlCmd.CommandText = sqlstr;
+            try
+            {
+                int affected= sqlCmd.ExecuteNonQuery();
+                //将参数导出
+                if (autoClose)
+                {
+                    CloseConn();
+                    //this._sqlconnection.Close();
+                }
+                return affected;
+            }
+            catch (System.Exception ex)
+            {
+                Error = ex;
+                CloseConn();
+                //this._sqlconnection.Close();
+                return -1;
+            }
+        }
 
+        #region old
+        ///// <summary>
+        ///// tidb里删除大量里会报错Transaction is too large, size: 104857600
+        ///// 用此方法解决
+        ///// </summary>
+        ///// <returns></returns>
+        //        public bool TidbHugeDelete(string tableName,string whereSql)
+        //        {
+        //            int cnt = 1;
+        //            while (cnt > 0)
+        //            {
+        //                if(!ExecuteSql(string.Format(@"
+        //delete from {0} {1} limit 1000000
+        //", tableName, whereSql)))
+        //                {
+        //                    return false;
+        //                }
+        //                //报错,关键字不在字典
+        ////                var cntObj = QuerySingleValue(string.Format(@"
+        ////select exists(select * from {0} {1} limit 0,1) as cnt
+        ////", tableName, whereSql));
+        //                var cntObj = QuerySingleValue(string.Format(@"
+        // select 1 from {0} {1} limit 0,1
+        //", tableName, whereSql));
+        //                cnt =PFDataHelper.ObjectToInt(cntObj) ??0;
+        //            }
+        //            return true;
+        //        } 
+        #endregion
+        /// <summary>
+        /// tidb里删除大量里会报错Transaction is too large, size: 104857600
+        /// 用此方法解决
+        /// </summary>
+        /// <returns></returns>
+        public bool TidbHugeDelete(string updateSql)
+        {
+            SetHugeCommandTimeOut();
+            int batch = 1000000;
+            updateSql = string.Format(@"
+{0}
+limit {1}
+", updateSql, batch);
+            int affected = 1;
+            while (affected > 0)
+            {
+                affected = ExecuteSqlInt(updateSql);
+                if (affected == -1)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// tidb的事务有限制,要分批更新,所以要如下使用(要求必需有has_updated字段辅助更新)
+        /// 
+        /// 用法1:(重点是where is_new_hy判断更新完毕)
+        /// update monthly_hyzl set is_new_hy=(case when accmon=date_format(create_date, '%Y.%m') then CONVERT(bit,1) else CONVERT(bit,0) end)
+        /// where is_new_hy is null
+        /// 
+        /// 用法2:(重点是has_updated的设置,更新前先设置为0)
+        ///sqlExec.TidbHugeUpdate(string.Format(@"
+        ///update monthly_hyzl a
+        ///inner join monthly_hyzl as lm on xxx
+        ///set xxx,
+        ///    a.has_updated=1
+        ///where xxx
+        ///and a.has_updated=0
+        ///"),
+        ///string.Format(@"
+        ///update monthly_hyzl set has_updated=0
+        ///where xxx
+        ///and has_updated =1
+        ///")
+        ///);
+        /// </summary>
+        /// <param name="updateSql"></param>
+        /// <returns></returns>
+        public bool TidbHugeUpdate( string updateSql,params string[] resetHasUpdatedFieldSqls)
+        {
+            //if (updateSql.IndexOf("has_updated") < 0) { return false; }//自行用其它字段控制也行的
+
+            SetHugeCommandTimeOut();
+            int batch = 500000;
+            updateSql = string.Format(@"
+{0}
+limit {1}
+", updateSql, batch);
+
+            int affected = 1;
+
+
+            if (resetHasUpdatedFieldSqls != null)
+            {
+                foreach(var i in resetHasUpdatedFieldSqls)
+                {
+                    var resetHasUpdatedFieldSql = string.Format(@"
+{0}
+limit {1}
+", i, batch);
+
+                    affected = 1;
+                    while (affected > 0)
+                    {
+                        affected = ExecuteSqlInt(resetHasUpdatedFieldSql);
+                        if (affected == -1) {
+                            PFDataHelper.WriteError(Error);
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            affected = 1;
+            while (affected > 0)
+            {
+                affected = ExecuteSqlInt(updateSql);
+                if (affected == -1)
+                {
+                    PFDataHelper.WriteError(Error);
+                    return false;
+                }              
+            }
+            return true;
+        }
 
         #region old
         //public bool HugeInsertReader(SqlInsertCollection insert,
@@ -411,7 +566,8 @@ namespace Perfect
             DbDataReader rdr, string tableName,
             Action<BatchInsertOption> insertOptionAction = null,
             Action<SqlInsertCollection> rowAction = null,
-            Action<int> sqlRowsCopiedAction = null)
+            Action<int> sqlRowsCopiedAction = null,
+            Func< bool> stopAction = null)
         {
             if (insert == null)
             {
@@ -471,18 +627,24 @@ namespace Perfect
                 hasUnDo = true;
                 if (batchCnt > batchSize)
                 {
-                    //var b = ExecuteSql(sb.ToString(), false);
                     var b = ExecuteSql(sb.ToString(), false);
                     if (!b)
                     {
                         CloseReader(rdr);
-                        //rdr.Close();
                         CloseConn();
                         return false;
                     }
                     if (sqlRowsCopiedAction != null)
                     {
                         sqlRowsCopiedAction(idx);
+                    }
+                    if (stopAction != null)
+                    {
+                        if (stopAction())
+                        {//允许中途终止--benjamin20200812
+                            CloseReader(rdr);
+                            CloseConn();
+                        }
                     }
                     sb.Clear();
 
@@ -503,12 +665,12 @@ namespace Perfect
                 var b = ExecuteSql(sb.ToString(), false);
                 if (!b)
                 {
-                    rdr.Close();
+                    CloseReader(rdr);
                     CloseConn();
                     return false;
                 }
             }
-            rdr.Close();
+            CloseReader(rdr);
             CloseConn();
 
             return true;
@@ -626,6 +788,17 @@ namespace Perfect
 
             return true;
         }
+        /// <summary>
+        /// 使用方法:b = sqlExec.HugeInsertList(null, updateList, "monthly_province_statistics", null, null);
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="insert"></param>
+        /// <param name="list"></param>
+        /// <param name="tableName"></param>
+        /// <param name="insertOptionAction"></param>
+        /// <param name="rowAction"></param>
+        /// <param name="sqlRowsCopiedAction"></param>
+        /// <returns></returns>
         public bool HugeInsertList<T>(SqlInsertCollection insert,
             IList<T> list, string tableName,
             Action<BatchInsertOption> insertOptionAction = null,
@@ -740,10 +913,6 @@ namespace Perfect
             var insertOption = new BatchInsertOption();
             if (insertOptionAction != null) { insertOptionAction(insertOption); }
 
-            //int batch = 1000;
-            //int cur = 0;
-            int already = 0;
-            //string sql = "";
             var sb = new StringBuilder();
             int idx = 0;
             int batchSize = insertOption.ProcessBatch;// 50000;// tidb设置大些试试,测试100万行/25秒
@@ -751,15 +920,6 @@ namespace Perfect
             bool hasUnDo = false;
             while (rdr.Read())
             {
-                //////var item = rdrAction(rdr);
-                //////if (item == null) { continue; }
-                //////update.UpdateModelValue(item);
-
-                ////if (rowAction != null) { rowAction(update,rdr); }
-                //foreach (var i in update)
-                //{
-                //    i.Value.Value = rdr[i.Key];
-                //}
                 if (insertOption.AutoUpdateModel)
                 {
                     update.UpdateByDataReader(rdr);
@@ -774,39 +934,96 @@ namespace Perfect
 
                 sb.AppendFormat(@" update {0} set {1} {2};
                 ", tableName, update.ToSetSql(), update.ToWhereSql());
-                //sql += string.Format(@" update {0} set {1} {2};
-                //", tableName, update.ToSetSql(), update.ToWhereSql());
 
-                //cur++;
                 hasUnDo = true;
                 if (batchCnt > batchSize)
                 {
-                    //continue;//benjamin 
-                    //if (!ExecuteTransactSql(sql))
                     if (!ExecuteSql(sb.ToString()))
                     {
+                        CloseReader(rdr);
                         return false;
                     }
-                    //already += batch;
                     if (sqlRowsUpdatedAction != null) { sqlRowsUpdatedAction(idx); }
                     batchCnt = 0;
-                    //batchList.Clear();
-                    //sql = "";
+
                     sb.Clear();
                     hasUnDo = false;
-                    //batchList = new List<DayOrdersUpdate>();
                 }else
                 {
                     batchCnt++;
                 }
                 idx++;
             }
-            rdr.Close();
+            //rdr.Close();
+            CloseReader(rdr);
+            if (hasUnDo)
+            {
+                if (!ExecuteSql(sb.ToString()))
+                {
+                    return false;
+                }
+            }
+            CloseConn();
+            return true;//benjamin 
+        }
+        public bool HugeUpdateList<T>(MySqlUpdateCollection update, IList<T> list, string tableName,
+            Action<BatchInsertOption> insertOptionAction,
+            Func<BaseSqlUpdateCollection, T, bool> rowAction,//考虑这个是否必要
+            Action<int> sqlRowsUpdatedAction = null)
+        {
+
+            var insertOption = new BatchInsertOption();
+            if (insertOptionAction != null) { insertOptionAction(insertOption); }
+            
+            //string sql = "";
+            var sb = new StringBuilder();
+            int idx = 0;
+            int batchSize = insertOption.ProcessBatch;// 50000;// tidb设置大些试试,测试100万行/25秒
+            int batchCnt = 0;
+            bool hasUnDo = false;
+            foreach (var i in list)
+            {
+
+                if (insertOption.AutoUpdateModel)
+                {
+                    update.UpdateModelValue(i);
+                }
+                if (rowAction != null)
+                {
+                    if (!rowAction(update, i))
+                    {
+                        continue;
+                    }
+                }
+
+                sb.AppendFormat(@" update {0} set {1} {2};
+                ", tableName, update.ToSetSql(), update.ToWhereSql());
+                
+                hasUnDo = true;
+                if (batchCnt > batchSize)
+                {
+                    if (!ExecuteSql(sb.ToString()))
+                    {
+                        return false;
+                    }
+
+                    if (sqlRowsUpdatedAction != null) { sqlRowsUpdatedAction(idx); }
+                    batchCnt = 0;
+
+                    sb.Clear();
+                    hasUnDo = false;
+                }
+                else
+                {
+                    batchCnt++;
+                }
+                idx++;
+            }
+            //rdr.Close();
             CloseConn();
             if (hasUnDo)
             {
-                //return false;//benjamin 
-                //if (!ExecuteTransactSql(sql))
+
                 if (!ExecuteSql(sb.ToString()))
                 {
                     return false;
@@ -848,6 +1065,313 @@ namespace Perfect
                 return count;
             //}
         }
+        /// <summary>
+        /// 更新同比环比字段(暂规定统一以create_date为时间字段,同比前缀ly_,环比前缀lm_)
+        /// </summary>
+        /// <param name="transfer"></param>
+        /// <param name="valuefields"></param>
+        public void UpdateYearOnYearField(string tableName,string cmonth,string[] primaryKeys, string[] valuefields)
+        {
+            //var cmonth = transfer.ViewData["cmonth"].ToString();
+            var last_cmonth = PFDataHelper.CMonthAddMonths(cmonth, -1);
+            var last_year = PFDataHelper.CMonthAddYears(cmonth, -1);
+
+            //var sqlExec = new MySqlExecute(transfer.DstConn);
+            var thisMonthDt = GetQueryTable(string.Format(@"
+select * from {0} where create_date= STR_TO_DATE('{1}.01','%Y.%m.%d')
+", tableName, cmonth));
+            var thisMonthList = thisMonthDt == null ? new List<Dictionary<string, object>>() : thisMonthDt.DataTableToDictList(false);
+
+            var lastMonthDt = GetQueryTable(string.Format(@"
+select * from {0} where create_date= STR_TO_DATE('{1}.01','%Y.%m.%d')
+", tableName, last_cmonth));
+            var lastMonthList = lastMonthDt == null ? new List<Dictionary<string, object>>() : lastMonthDt.DataTableToDictList(false);
+
+            var lastYearDt = GetQueryTable(string.Format(@"
+select * from {0} where create_date= STR_TO_DATE('{1}.01','%Y.%m.%d')
+", tableName, last_year));
+            var lastYearList = lastYearDt == null ? new List<Dictionary<string, object>>() : lastYearDt.DataTableToDictList(false);
+
+            var updateList = new List<Dictionary<string, object>>();
+            var insertList = new List<Dictionary<string, object>>();
+            var valueFieldZero= new Dictionary<string, object>();//值列最好是不要有null值,否则BI里相减会得null,很不方便,其实所有decimal列都要
+
+            Action<List<Dictionary<string, object>>> findZero = list =>
+            {
+                if (list.Any())
+                {
+                    foreach (var i in list[0])
+                    {
+                        if ((!primaryKeys.Contains(i.Key))&&(!valueFieldZero.ContainsKey(i.Key)) && i.Value != null)
+                        {
+                            var typeString = PFDataHelper.GetStringByType(i.Value.GetType());
+                            if (typeString == "decimal")
+                            {
+                                valueFieldZero.Add(i.Key, new decimal(0));
+                            }else if (new string[] { "int","long" }.Contains(typeString))
+                            {
+                                valueFieldZero.Add(i.Key, 0);
+                            }
+                        }
+                    }
+                }
+            };
+            findZero(thisMonthList);
+            findZero(lastMonthList);
+            findZero(lastYearList);
+
+            Func< Dictionary < string, object> ,string, Dictionary<string, object>> newRow = (srcRow,cmonth1) =>
+            {
+                var r =new Dictionary<string, object>
+                    {
+                        {"create_date",PFDataHelper.CMonthToMySqlDate(cmonth) }
+                    };
+                foreach (var k in primaryKeys)
+                {
+                    if (k != "create_date")
+                    {
+                        r.Add(k, srcRow[k]);
+                    }
+                }
+                foreach (var k in valueFieldZero)
+                {
+                    r.Add(k.Key, k.Value);
+                    //if (valuefields.Contains(k.Key))
+                    //{
+                    //    r.Add("lm_" + k.Key, k.Value);
+                    //    r.Add("ly_" + k.Key, k.Value);
+                    //}
+                }
+                return r;
+            };
+
+            foreach (var j in lastMonthList)
+            {
+                Dictionary<string, object> item = null;
+                if (thisMonthList.Any())
+                {
+                    foreach (var i in thisMonthList)
+                    {
+                        var isMatch = true;
+                        foreach (var k in primaryKeys)
+                        {
+                            if (k != "create_date")
+                            {
+
+                                if (!PFDataHelper.IsObjectEquals(i[k], j[k]))
+                                {
+                                    isMatch = false;
+                                    break;
+                                }
+                                //if (!PFDataHelper.IsObjectEquals(i[k],j[k]))
+                                //{
+                                //    isMatch = false;
+                                //    break;
+                                //}
+                            }
+                        }
+                        if (isMatch)
+                        {
+                            item = i;
+                            break;
+                        }
+                    }
+                }
+                //var item = thisMonthList.Any()? thisMonthList.FirstOrDefault(a => a["province_name"] == j["province_name"] && a["hpos"] == j["hpos"] && a["qpos"] == j["qpos"] && a["is_new_hy"] == j["is_new_hy"])
+                //    :null;
+                //bool isAdd = false;
+                if (item == null)
+                {
+                    //isAdd = true;
+                    item = newRow(j,cmonth);
+                    #region old
+                    //item = new Dictionary<string, object>
+                    //{
+                    //    {"create_date",PFDataHelper.CMonthToMySqlDate(cmonth) }
+                    //};
+                    //foreach (var k in primaryKeys)
+                    //{
+                    //    if (k != "create_date")
+                    //    {
+                    //        item.Add(k, j[k]);
+                    //    }
+                    //}
+                    //foreach (var k in valueFieldZero)
+                    //{
+                    //    item.Add(k.Key, k.Value);
+                    //    if (valuefields.Contains(k.Key))
+                    //    {
+                    //        item.Add("lm_" + k.Key, k.Value);
+                    //        item.Add("ly_" + k.Key, k.Value);
+                    //    }
+                    //} 
+                    #endregion
+                    insertList.Add(item);
+                }
+                else
+                {
+                    updateList.Add(item);
+                }
+                foreach (var k in valuefields)
+                {
+                    item["lm_" + k] = j[k];
+                }
+
+            }
+            foreach (var j in lastYearList)
+            {
+                Dictionary<string, object> item = null;
+                if (thisMonthList.Any())
+                {
+                    foreach (var i in thisMonthList)
+                    {
+                        var isMatch = true;
+                        foreach (var k in primaryKeys)
+                        {
+                            if (k != "create_date")
+                            {
+                                if (!PFDataHelper.IsObjectEquals(i[k], j[k]))
+                                {
+                                    isMatch = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isMatch)
+                        {
+                            item = i;
+                            break;
+                        }
+                    }
+                }
+                //var item = thisMonthList.FirstOrDefault(a => a.province_name == j.province_name && a.hpos == j.hpos && a.qpos == j.qpos && a.is_new_hy == j.is_new_hy);
+                //bool isAdd = false;
+                if (item == null)
+                {
+                    //isAdd = true;
+                    if (insertList.Any())
+                    {
+                        foreach (var i in insertList)
+                        {
+                            var isMatch = true;
+                            foreach (var k in primaryKeys)
+                            {
+                                if (k != "create_date")
+                                {
+                                    if (!PFDataHelper.IsObjectEquals(i[k], j[k]))
+                                    {
+                                        isMatch = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (isMatch)
+                            {
+                                item = i;
+                                break;
+                            }
+                        }
+                    }
+                    //item = insertList.FirstOrDefault(a => a.province_name == j.province_name && a.hpos == j.hpos && a.qpos == j.qpos && a.is_new_hy == j.is_new_hy);
+                    if (item == null)
+                    {
+                        item = newRow(j,cmonth);
+                        #region old
+                        //item = new Dictionary<string, object>
+                        //{
+                        //    {"create_date",PFDataHelper.CMonthToMySqlDate(cmonth) }//,
+                        //};
+                        //foreach (var k in primaryKeys)
+                        //{
+                        //    if (k != "create_date")
+                        //    {
+                        //        item.Add(k, j[k]);
+                        //    }
+                        //}
+                        //foreach (var k in valueFieldZero)
+                        //{
+                        //    item.Add(k.Key, k.Value);
+                        //    if (valuefields.Contains(k.Key))
+                        //    {
+                        //        item.Add("lm_" + k.Key, k.Value);
+                        //        item.Add("ly_" + k.Key, k.Value);
+                        //    }
+                        //} 
+                        #endregion
+                        insertList.Add(item);
+                    }
+                }
+                else
+                {
+                    Dictionary<string, object> updateItem = null;
+                    if (updateList.Any())
+                    {
+                        foreach (var i in updateList)
+                        {
+                            var isMatch = true;
+                            foreach (var k in primaryKeys)
+                            {
+                                if (k != "create_date")
+                                {
+                                    if (!PFDataHelper.IsObjectEquals(i[k], j[k]))
+                                    {
+                                        isMatch = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (isMatch)
+                            {
+                                updateItem = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    //var updateItem = updateList.FirstOrDefault(a => a.province_name == j.province_name && a.hpos == j.hpos && a.qpos == j.qpos && a.is_new_hy == j.is_new_hy);
+                    if (updateItem == null)
+                    {
+                        updateList.Add(item);
+                    }
+                    else
+                    {
+                        item = updateItem;
+                    }
+                }
+                foreach (var k in valuefields)
+                {
+                    item["ly_" + k] = j[k];
+                }
+            }
+
+            var b = true;
+            //当单独执行AfterTransferAction时,还是先把同比环比清空比较稳,否则会有上次残留结果
+            //var valuefields = new string[] { "new_hy_qty", "valid_hy_qty", "valid_hy_hpos_above_5_qty", "valid_hy_hpos_0_qty" };
+            b = ExecuteSql(string.Format(@"
+update {0} set {1},{2} where create_date= STR_TO_DATE('{3}.01','%Y.%m.%d')
+",
+tableName,
+string.Join(",", valuefields.Select(a => string.Format(" ly_{0}=0 ", a))),
+string.Join(",", valuefields.Select(a => string.Format(" lm_{0}=0 ", a))),
+cmonth));
+            if (updateList.Any())
+            {
+                var update = new MySqlUpdateCollection(updateList.First());
+                //update.UpdateFields("lm_new_hy_qty", "lm_valid_hy_qty", "lm_valid_hy_hpos_above_5_qty", "lm_valid_hy_hpos_0_qty");
+                var updateFields = new List<string>();
+                update.UpdateFields(PFDataHelper.MergeList(
+                    valuefields.Select(a => "lm_" + a).ToList(),
+                    valuefields.Select(a => "ly_" + a).ToList()
+                    ).ToArray());
+                update.PrimaryKeyFields(false, primaryKeys);
+                b = HugeUpdateList(update, updateList, tableName, null, null);
+            }
+            if (insertList.Any())
+            {
+                //var insert = new MySqlInsertCollection(insertList.First());
+                b = HugeInsertList(null, insertList,tableName, null, null);
+            }
+        }
         public bool CloseReader(DbDataReader reader)
         {
             sqlCmd.Cancel();//如果没有这句,数据很多时 dr.Close 会很慢 https://www.cnblogs.com/xyz0835/p/3379676.html
@@ -861,6 +1385,19 @@ namespace Perfect
             public int ProcessBatch { get { return _processBatch; } set { _processBatch = value; } }
             private bool _autoUpdateModel = true;
             public bool AutoUpdateModel { get { return _autoUpdateModel; } set { _autoUpdateModel = value; } }
+
+            /// <summary>
+            /// 用于下面这种更新的行数
+            /// update xx from xx where xx;
+            /// update xx from xx where xx;//...n行
+            /// 可以认为是tidb里的 max_allowed_packet=67108864 变量
+            /// </summary>
+            public void SetTidbBatchUpdateProcessBatch()
+            {
+                //// Packets larger than max_allowed_packet are not allowed
+                //_processBatch =  500000;
+                _processBatch = 100000;
+            }
         }
     }
 }

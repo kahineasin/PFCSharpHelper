@@ -24,6 +24,7 @@ using System.Net.Mail;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Net.Sockets;
+using MySql.Data.Types;
 //using Aspose.Cells;
 //using System.Threading.Tasks;
 
@@ -152,7 +153,7 @@ namespace Perfect
         public static string YMFormat = "yyyyMM";
 
         /// <summary>
-        /// 系统最大月份(对于数据庞大的系统,有起始数据月份是合理的)
+        /// 系统最大月份,即最大月结月份(对于数据庞大的系统,有起始数据月份是合理的)
         /// </summary>
         public static PFCmonth SysMaxMonth;
         public static PFCmonth SysMinMonth;
@@ -347,6 +348,12 @@ namespace Perfect
             var month = int.Parse(cmonth.Substring(5, 2));
             return new DateTime(year, month, 1);
         }
+        public static MySqlDateTime CMonthToMySqlDate(string cmonth)
+        {
+            var year = int.Parse(cmonth.Substring(0, 4));
+            var month = int.Parse(cmonth.Substring(5, 2));
+            return new MySqlDateTime(year, month, 1, 0, 0, 0, 0);
+        }
         public static DateTime? CMonthToDate(object cmonthObj)
         {
             var cmonth = ObjectToString(cmonthObj);
@@ -362,6 +369,11 @@ namespace Perfect
         {
             if (cmonth == null) { return null; }
             return DateToCMonth(PFDataHelper.CMonthToDate(cmonth).AddMonths(months));
+        }
+        public static string CMonthAddYears(string cmonth, int years)
+        {
+            if (cmonth == null) { return null; }
+            return DateToCMonth(PFDataHelper.CMonthToDate(cmonth).AddYears(years));
         }
         //public static DateTime YmToDate(string cmonth)
         //{
@@ -991,6 +1003,10 @@ namespace Perfect
             }
             return null;
         }
+        public static decimal ObjectToDecimal0(object value)
+        {
+            return ObjectToDecimal(value) ?? 0;
+        }
         public static int? ObjectToInt(object value)
         {
             if (value == null || value == DBNull.Value) { return null; }
@@ -1000,11 +1016,20 @@ namespace Perfect
                 return b ? 1 : 0;
             }
             int r = 0;
-            if (int.TryParse(value.ToString(), out r))
+            if (int.TryParse(value.ToString().Replace(",", ""), out r))
             {
                 return r;
             }
             return null;
+        }
+        /// <summary>
+        /// 默认0,方便计算
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static int ObjectToInt0(object value)
+        {
+            return ObjectToInt(value) ?? 0;
         }
         public static long? ObjectToLong(object value)//long就是int64
         {
@@ -2388,7 +2413,15 @@ namespace Perfect
             var mapper = configMapper.GetModelConfigMapper()
                 .FirstOrDefault(a => a.ModelName == fullname || a.ModelName == name);//当Model名有重复但命名空间不一样时,这样找是有风险的,定义mapper时最好把fullName的项放在前面
 
-            if (mapper == null) { return null; }
+            if (mapper == null)
+            {
+                //return null;
+                mapper = new PFModelConfigMapper
+                {
+                    XmlDataSetName = fullname,
+                    OtherXmlDataSetName = { name }
+                };
+            }
 
             var pathConfig = configMapper.GetPathConfig();
             //string xmlfile = Path.Combine(HttpRuntime.AppDomainAppPath, pathConfig.ConfigPath + "\\FieldSets.xml");
@@ -2426,16 +2459,18 @@ namespace Perfect
                     var otherDataSet = dataSets
                         .SelectSingleNode(string.Format("DataSet[@name='{0}']", a));
 
-                    foreach (XmlNode i in otherDataSet.SelectSingleNode("Fields").ChildNodes)
+                    if (otherDataSet != null)
                     {
-                        var fieldName = i.SelectSingleNode("FieldName");
-                        //if (!result.Any(b => b.PropertyName == i.SelectSingleNode("FieldName").InnerText))
-                        if (!result.ContainsKey(fieldName.InnerText))
+                        foreach (XmlNode i in otherDataSet.SelectSingleNode("Fields").ChildNodes)
                         {
-                            result.Add(fieldName.InnerText, new PFModelConfig(i, a));
+                            var fieldName = i.SelectSingleNode("FieldName");
+                            //if (!result.Any(b => b.PropertyName == i.SelectSingleNode("FieldName").InnerText))
+                            if (!result.ContainsKey(fieldName.InnerText))
+                            {
+                                result.Add(fieldName.InnerText, new PFModelConfig(i, a));
+                            }
                         }
                     }
-
                 });
             }
             ////特殊配置的属性
@@ -5524,7 +5559,7 @@ string.Join("\r\n", errors.ToArray())
             return this.PropertyName == obj.PropertyName && this.DataSet == obj.DataSet && this.FieldName == obj.FieldName;
         }
 
-        public PFModelConfig Apply( PFModelConfig src)
+        public PFModelConfig Apply(PFModelConfig src)
         {
             #region 不用反射性能更好
             this.PropertyName = src.PropertyName;
@@ -5546,7 +5581,7 @@ string.Join("\r\n", errors.ToArray())
         public PFModelConfig TClone()
         {
             #region 不用反射性能更好
-            return new PFModelConfig().Apply( this);
+            return new PFModelConfig().Apply(this);
             //return new PFModelConfig
             //{
             //    PropertyName = this.PropertyName,
@@ -5643,7 +5678,9 @@ string.Join("\r\n", errors.ToArray())
     public class PFModelConfigCollection : Dictionary<string, PFModelConfig>, IDisposable
     {
         private Dictionary<string, string> _commonPrev = new Dictionary<string, string> {
-            { "old_","原" }
+            { "old_","原" },
+            { "ly_","上年" },
+            { "lm_","上月" }
         };
         private Dictionary<string, string> _commonWord = new Dictionary<string, string> {
             { "old","原" }
@@ -5709,6 +5746,10 @@ string.Join("\r\n", errors.ToArray())
         {
             this.Clear();
         }
+        //public void Add(PFModelConfig modelConfig)
+        //{
+        //    this.Add(modelConfig.FieldName, modelConfig);
+        //}
     }
     public class PFModelConfigMapper
     {
@@ -5803,18 +5844,127 @@ string.Join("\r\n", errors.ToArray())
     public class SqlCreateTableItem : PFModelConfig
     {
         public SqlCreateTableItem() { }
-        public SqlCreateTableItem(PFModelConfig modelConfig):base(modelConfig)
+        public SqlCreateTableItem(PFModelConfig modelConfig) : base(modelConfig)
         { }
     }
     public class SqlCreateTableCollection : List<SqlCreateTableItem>// Dictionary<string, PFModelConfig>
     {
         private string _charset = "utf-8";
         public string TableName { get; set; }
+        /// <summary>
+        /// 表备注
+        /// </summary>
+        public string TableComment { get; set; }
         public string Charset { get { return _charset; } set { _charset = value; } }
         public virtual string FieldQuotationCharacterL { get { return "`"; } }//[
         public virtual string FieldQuotationCharacterR { get { return "`"; } }//]
         public string[] PrimaryKey { get; set; }
         public string[] TableIndex { get; set; }
+        public SqlCreateTableCollection() { }
+        //public SqlCreateTableCollection(SqlInsertCollection insert,Dictionary<string,string> columnComment=null)
+        //{
+        //    foreach (var i in insert)
+        //    {
+        //        var item = new SqlCreateTableItem
+        //        {
+        //            FieldName = i.Key,
+        //            FieldType = i.Value.VType
+        //        };
+        //        if(columnComment!=null&& columnComment.ContainsKey(i.Key))
+        //        {
+        //            item.FieldText = columnComment[i.Key];
+        //        }
+        //        this.Add(item);
+        //    }
+        //}
+        /// <summary>
+        /// 使用方法:       
+        ///SqlCreateTableCollection sqlCreateTable = new SqlCreateTableCollection(
+        ///    "monthly_finance_statistics",
+        ///    new MySqlInsertCollection(new MonthlyFinanceStatisticsCreate()),
+        ///    new string[] { "create_date" },
+        ///    null,
+        ///    PFDataHelper.GetModelConfig(typeof(MonthlyFinanceStatistics)),
+        ///    "各月财务统计"
+        ///);
+        /// 
+        /// 此方法要求提供insert的原因是:建表字段应该是根据CreateModel生成的,而modelConfig里可能含有一些经过转换后用于显示的字段
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="insert"></param>
+        /// <param name="primaryKey"></param>
+        /// <param name="tableIndex"></param>
+        /// <param name="modelConfig"></param>
+        /// <param name="tableComment"></param>
+        public SqlCreateTableCollection(string tableName, SqlInsertCollection insert, string[] primaryKey, string[] tableIndex = null, PFModelConfigCollection modelConfig = null, string tableComment = null)
+        {
+            foreach (var i in insert)
+            {
+                var fieldName = i.Key;
+                var m = modelConfig.ContainsKey(fieldName)
+                    ? new SqlCreateTableItem(modelConfig[fieldName])
+                    : new SqlCreateTableItem
+                    {
+                        FieldName = fieldName
+                    };
+                m.FieldType = i.Value.VType;
+
+                //var updateItem = new SqlUpdateItem { Key = rdr.GetName(i), VType = rdr.GetFieldType(i) };
+                Add(m);
+            }
+            TableName = tableName;
+            PrimaryKey = primaryKey;
+            TableIndex = tableIndex;
+            TableComment = tableComment;
+            //foreach (var i in insert)
+            //{
+            //    var item = new SqlCreateTableItem
+            //    {
+            //        FieldName = i.Key,
+            //        FieldType = i.Value.VType
+            //    };
+            //    if (modelConfig != null && modelConfig.ContainsKey(i.Key))
+            //    {
+            //        item.FieldText = modelConfig[i.Key].FieldText;
+            //    }
+            //    this.Add(item);
+            //}
+        }
+        //public SqlCreateTableCollection(//string tableName,
+        //    SqlInsertCollection insert, //string[] primaryKey, string[] tableIndex = null,
+        //    PFModelConfigCollection modelConfig = null)
+        //{
+        //    foreach (var i in insert)
+        //    {
+        //        var fieldName = i.Key;
+        //        var m = modelConfig.ContainsKey(fieldName)
+        //            ? new SqlCreateTableItem(modelConfig[fieldName])
+        //            : new SqlCreateTableItem
+        //            {
+        //                FieldName = fieldName
+        //            };
+        //        m.FieldType = i.Value.VType;
+
+        //        //var updateItem = new SqlUpdateItem { Key = rdr.GetName(i), VType = rdr.GetFieldType(i) };
+        //        Add(m);
+        //    }
+        //    //TableName = tableName;
+        //    //PrimaryKey = primaryKey;
+        //    //TableIndex = tableIndex;
+        //    ////foreach (var i in insert)
+        //    ////{
+        //    ////    var item = new SqlCreateTableItem
+        //    ////    {
+        //    ////        FieldName = i.Key,
+        //    ////        FieldType = i.Value.VType
+        //    ////    };
+        //    ////    if (modelConfig != null && modelConfig.ContainsKey(i.Key))
+        //    ////    {
+        //    ////        item.FieldText = modelConfig[i.Key].FieldText;
+        //    ////    }
+        //    ////    this.Add(item);
+        //    ////}
+        //}
         public string ToSql()
         {
             #region tidb上测试通过
@@ -5823,7 +5973,7 @@ string.Join("\r\n", errors.ToArray())
             CREATE TABLE `{0}` (
               {1}
                {2}
-            );
+            ){3};
 
             ",
 TableName,
@@ -5837,7 +5987,8 @@ string.Join(",", this.Select(
         )
     ).ToArray()
 ),
-    PrimaryKey != null && PrimaryKey.Any() ? string.Format(",PRIMARY KEY({0})", string.Join(",", PrimaryKey)) : ""
+    PrimaryKey != null && PrimaryKey.Any() ? string.Format(",PRIMARY KEY({0})", string.Join(",", PrimaryKey)) : "",
+    TableComment == null ? "" : string.Format("COMMENT = '{0}'", TableComment)
 );
             if (TableIndex != null && TableIndex.Any())
             {
@@ -5872,10 +6023,10 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
         }
         public string GetFieldTypeString(PFModelConfig m)
         {
-            var typeString=PFDataHelper.GetStringByType(m.FieldType);
+            var typeString = PFDataHelper.GetStringByType(m.FieldType);
             string r = "";
             if (m.FieldType == typeof(int)
-                || typeString=="long"||typeString=="int"
+                || typeString == "long" || typeString == "int"
                 )
             {
                 //r = string.Format("int");//int(11) ?后面不知道要不要长度
@@ -5888,13 +6039,13 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
                 r = string.Format("varchar({0})", m.FieldSqlLength ?? 100);//int(11) ?后面不知道要不要长度
             }
             else if (m.FieldType == typeof(decimal)
-                ||typeString== "decimal"
+                || typeString == "decimal"
                 )
             {
                 r = string.Format("decimal({0},{1})", m.FieldSqlLength ?? 18, m.Precision ?? 2);
             }
             else if (m.FieldType == typeof(DateTime)
-                ||typeString== "DateTime")
+                || typeString == "DateTime")
             {
                 r = "datetime";
             }
@@ -5964,6 +6115,7 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
     /// </summary>
     public class SqlWhereCollection : List<SqlWhereItem>
     {
+        private bool _ignoreNullValue = true;
         public virtual string FieldQuotationCharacterL { get { return "["; } }
         public virtual string FieldQuotationCharacterR { get { return "]"; } }
         public enum WhereOrAnd
@@ -5971,6 +6123,10 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
             Where = 1,
             And = 2
         }
+        /// <summary>
+        /// 用于update语句的where条件时,希望空值不忽略(严格保险)
+        /// </summary>
+        public bool IgnoreNullValue { get { return _ignoreNullValue; } set { _ignoreNullValue = value; } }
         /// <summary>
         /// 分页参数
         /// </summary>
@@ -6014,15 +6170,23 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
             var prev = "";
             foreach (var i in this)
             {
-                if (i.Value != null)
+                if (i.Value != null || (!IgnoreNullValue))
                 {
                     prev = count == 0 ?
                         (woa == WhereOrAnd.Where ? " where " : " and ")
                         : " and ";
 
                     var val = i.Value;
-                    //if (i.Value is DateTime) { tmpControl.Text = PFDataHelper.ObjectToDateString(val, tmpControl.Attributes["dateFmt"]); }
-                    if (val is string && !PFDataHelper.StringIsNullOrWhiteSpace(val.ToString()))
+                    ////var typeString = PFDataHelper.GetStringByType(i.Value.GetType());
+                    //////if (i.Value is DateTime) { tmpControl.Text = PFDataHelper.ObjectToDateString(val, tmpControl.Attributes["dateFmt"]); }
+                    //if (val is string && (
+                    //        (!PFDataHelper.StringIsNullOrWhiteSpace(val.ToString()))//这样当不忽略空值而val又是null时应该会报错--benjamin20200818
+                    //        || (!IgnoreNullValue)
+                    //    ))
+                    if (val is string && (
+                            (!IgnoreNullValue)
+                            || (!PFDataHelper.StringIsNullOrWhiteSpace(val.ToString()))
+                        ))
                     {
                         switch (i.ExpressionOperator)
                         {
@@ -6070,12 +6234,14 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
                         {
                             //日期的范围比较有些特别,把临界点包含进来比较适合
                             case SqlExpressionOperator.Less:
-                                //result += prev + string.Format(" isnull({0},'') <= '{1}' ", FormatKey(i.Key), i.Value);
-                                result += prev + string.Format(" isnull({0},0)<{1} ", FormatKey(i.Key), i.Value);
+                                ////result += prev + string.Format(" isnull({0},'') <= '{1}' ", FormatKey(i.Key), i.Value);
+                                //result += prev + string.Format(" isnull({0},0)<{1} ", FormatKey(i.Key), i.Value);
+                                result += prev + string.Format(" {0}<{1} ", FormatKey(i.Key), i.Value);
                                 break;
                             case SqlExpressionOperator.LessOrEqual:
-                                //result += prev + string.Format(" isnull({0},'') <= '{1}' ", FormatKey(i.Key), i.Value);
-                                result += prev + string.Format(" isnull({0},0)<={1} ", FormatKey(i.Key), i.Value);
+                                ////result += prev + string.Format(" isnull({0},'') <= '{1}' ", FormatKey(i.Key), i.Value);
+                                //result += prev + string.Format(" isnull({0},0)<={1} ", FormatKey(i.Key), i.Value);
+                                result += prev + string.Format(" {0}<={1} ", FormatKey(i.Key), i.Value);
                                 break;
                             case SqlExpressionOperator.Greater:
                                 //result += prev + string.Format(" isnull({0},'') >= '{1}' ", FormatKey(i.Key), i.Value);
@@ -6088,35 +6254,52 @@ CREATE INDEX  idx_{2} ON {0} ({1}{2}{3});
                                 result += prev + string.Format(" {0}>={1} ", FormatKey(i.Key), i.Value);
                                 break;
                             default:
-                                //result += prev + string.Format(" isnull({0},'')='{1}' ", FormatKey(i.Key), i.Value);
-                                result += prev + string.Format(" isnull({0},0)={1} ", FormatKey(i.Key), i.Value);
+                                ////result += prev + string.Format(" isnull({0},'')='{1}' ", FormatKey(i.Key), i.Value);
+                                //result += prev + string.Format(" isnull({0},0)={1} ", FormatKey(i.Key), i.Value);
+                                result += prev + string.Format(" {0}={1} ", FormatKey(i.Key), i.Value);
                                 break;
                         }
                         count++;
                     }
-                    else if (val is DateTime && val != null)
+                    else if ((val is DateTime || val is MySql.Data.Types.MySqlDateTime))
                     {
-                        var valDateTime = ((DateTime)val).ToString(PFDataHelper.DateFormat);
-                        switch (i.ExpressionOperator)
+                        if (val != null)
                         {
-                            case SqlExpressionOperator.Less:
-                                result += prev + string.Format(" isnull({0},'') < '{1}' ", FormatKey(i.Key), valDateTime);
-                                break;
-                            //日期的范围比较有些特别,把临界点包含进来比较适合
-                            case SqlExpressionOperator.LessOrEqual:
-                                result += prev + string.Format(" isnull({0},'') <= '{1}' ", FormatKey(i.Key), valDateTime);
-                                break;
-                            case SqlExpressionOperator.Greater:
-                                result += prev + string.Format(" isnull({0},'') > '{1}' ", FormatKey(i.Key), valDateTime);
-                                break;
-                            case SqlExpressionOperator.GreaterOrEqual:
-                                result += prev + string.Format(" isnull({0},'') >= '{1}' ", FormatKey(i.Key), valDateTime);
-                                break;
-                            default:
-                                result += prev + string.Format(" isnull({0},'')='{1}' ", FormatKey(i.Key), valDateTime);
-                                break;
+                            string valDateTime = "";
+                            if (val is DateTime)
+                            {
+                                valDateTime = ((DateTime)val).ToString(PFDataHelper.DateFormat);
+                            }
+                            else if (val is MySql.Data.Types.MySqlDateTime)
+                            {
+                                valDateTime = ((MySql.Data.Types.MySqlDateTime)val).Value.ToString(PFDataHelper.DateFormat);
+                            }
+                            switch (i.ExpressionOperator)
+                            {
+                                case SqlExpressionOperator.Less:
+                                    result += prev + string.Format(" {0}< '{1}' ", FormatKey(i.Key), valDateTime);
+                                    break;
+                                //日期的范围比较有些特别,把临界点包含进来比较适合
+                                case SqlExpressionOperator.LessOrEqual:
+                                    result += prev + string.Format(" {0}<= '{1}' ", FormatKey(i.Key), valDateTime);
+                                    break;
+                                case SqlExpressionOperator.Greater:
+                                    result += prev + string.Format(" {0}> '{1}' ", FormatKey(i.Key), valDateTime);
+                                    break;
+                                case SqlExpressionOperator.GreaterOrEqual:
+                                    result += prev + string.Format(" {0}>= '{1}' ", FormatKey(i.Key), valDateTime);
+                                    break;
+                                default:
+                                    result += prev + string.Format(" {0}='{1}' ", FormatKey(i.Key), valDateTime);
+                                    break;
+                            }
+                            count++;
                         }
-                        count++;
+                        else if (i.ExpressionOperator == SqlExpressionOperator.Equal)//IgnoreNullValue==False时有可能进入这里
+                        {
+                            result += prev + string.Format(" {0} is null ", FormatKey(i.Key));
+                            count++;
+                        }
                     }
                     else if (val is bool && val != null)
                     {
@@ -6227,22 +6410,46 @@ where rownumber between {1} and {2}
             )
         {
             _model = model;
-            //_modelProperties = PFDataHelper.GetProperties(model.GetType());
-            var modelProperties = PFDataHelper.GetProperties(model.GetType());
-            if (names != null && names.Length > 0)
+            if (model is Dictionary<string, object>)
             {
-                foreach (string i in names)
+                var modelDict = model as Dictionary<string, object>;
+                //--benjamin todo
+                if (names != null && names.Length > 0)
                 {
-                    //Add(i);
-                    base.Add(i, new SqlUpdateItem { Key = i, Value = modelProperties[i].GetValue(_model, null), VType = modelProperties[i].PropertyType, PInfo = modelProperties[i] });
+                    foreach (string i in names)
+                    {
+                        //Add(i);
+                        base.Add(i, new SqlUpdateItem { Key = i, Value = modelDict[i], VType = modelDict[i] == null ? null : modelDict[i].GetType() });
+                    }
+                }
+                else
+                {
+                    foreach (var i in modelDict)
+                    {
+                        //Add(i.Key, i.Value.GetValue(_model, null));
+                        base.Add(i.Key, new SqlUpdateItem { Key = i.Key, Value = i.Value, VType = i.Value == null ? null : i.Value.GetType() });
+                    }
                 }
             }
             else
             {
-                foreach (var i in modelProperties)
+                //_modelProperties = PFDataHelper.GetProperties(model.GetType());
+                var modelProperties = PFDataHelper.GetProperties(model.GetType());
+                if (names != null && names.Length > 0)
                 {
-                    //Add(i.Key, i.Value.GetValue(_model, null));
-                    base.Add(i.Key, new SqlUpdateItem { Key = i.Key, Value = i.Value.GetValue(_model, null), VType = i.Value.PropertyType, PInfo = i.Value });
+                    foreach (string i in names)
+                    {
+                        //Add(i);
+                        base.Add(i, new SqlUpdateItem { Key = i, Value = modelProperties[i].GetValue(_model, null), VType = modelProperties[i].PropertyType, PInfo = modelProperties[i] });
+                    }
+                }
+                else
+                {
+                    foreach (var i in modelProperties)
+                    {
+                        //Add(i.Key, i.Value.GetValue(_model, null));
+                        base.Add(i.Key, new SqlUpdateItem { Key = i.Key, Value = i.Value.GetValue(_model, null), VType = i.Value.PropertyType, PInfo = i.Value });
+                    }
                 }
             }
         }
@@ -6261,9 +6468,31 @@ where rownumber between {1} and {2}
         /// </summary>		
         public virtual void UpdateModelValue(object model)
         {
-            foreach (var i in this)
+            if (model is Dictionary<string, object>)
             {
-                i.Value.Value = i.Value.PInfo.GetValue(model, null);
+                var modelDict = model as Dictionary<string, object>;
+                foreach (var i in this)
+                {
+                    if (modelDict.ContainsKey(i.Key))
+                    {
+                        i.Value.Value = modelDict[i.Key];
+                        if (i.Value.VType == null && modelDict[i.Key] != null)
+                        {
+                            i.Value.VType = modelDict[i.Key].GetType();
+                        }
+                    }
+                    else
+                    {
+                        i.Value.Value = null;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var i in this)
+                {
+                    i.Value.Value = i.Value.PInfo.GetValue(model, null);
+                }
             }
         }
         //protected string GetFormatValue(object val)
@@ -6283,7 +6512,7 @@ where rownumber between {1} and {2}
             {
                 if (vtype == typeof(decimal) || vtype == typeof(decimal?) || vtype == typeof(int) || vtype == typeof(int?) || vtype == typeof(DateTime) || vtype == typeof(DateTime?) || vtype == typeof(bool) || vtype == typeof(bool?)
                     || vtype == typeof(double) || vtype == typeof(double?) || vtype == typeof(System.Type)
-                    ||typeString=="int"||typeString=="decimal" || typeString == "long" || typeString == "DateTime"
+                    || typeString == "int" || typeString == "decimal" || typeString == "long" || typeString == "DateTime"
                     )
                 {
                     return " null ";
@@ -6291,6 +6520,10 @@ where rownumber between {1} and {2}
                 else if (vtype == typeof(string))
                 {
                     return " '' ";
+                }
+                else if (typeString == "System.DBNull")
+                {
+                    return " null ";
                 }
                 else
                 {
@@ -6304,14 +6537,14 @@ where rownumber between {1} and {2}
                 //return string.Format(" '{0}' ", val);
                 return string.Format(" '{0}' ", (val as string).Replace("'", "''").Replace("\\", "\\\\"));//如果字符串有单引号,会报错--benjamin20200311
             }
-            if (val is decimal || val is int) { return string.Format(" {0} ", val); }
+            if (val is decimal || val is int || val is long) { return string.Format(" {0} ", val); }
             if (val is bool) { return string.Format(" {0} ", PFDataHelper.ObjectToBool(val) == true ? 1 : 0); }
             if (val is IList<string>)//支持string[]的成员
             {
                 var list = val as IList<string>;
                 return string.Format(" '{0}' ", string.Join(",", list.ToArray()));
             }
-            if(nonnullType == typeof(MySql.Data.Types.MySqlDateTime))
+            if (nonnullType == typeof(MySql.Data.Types.MySqlDateTime))
             //if(val is MySql.Data.Types.MySqlDateTime)
             {
                 return string.Format(" '{0}' ", ((MySql.Data.Types.MySqlDateTime)val).Value.ToString(PFDataHelper.DateFormat));
@@ -6386,6 +6619,7 @@ where rownumber between {1} and {2}
         {
             //_keyFields = new List<string>();
             _where = new TWhereCollection { };
+            _where.IgnoreNullValue = false;
             PrimaryFields = new Dictionary<string, SqlWhereItem>();
             foreach (var i in names)
             {
@@ -6484,9 +6718,27 @@ where rownumber between {1} and {2}
         public override void UpdateModelValue(object model)
         {
             base.UpdateModelValue(model);
-            foreach (var i in _where)
+            if (model is Dictionary<string, object>)
             {
-                i.Value = this[i.Key].PInfo.GetValue(model, null);
+                var modelDict = model as Dictionary<string, object>;
+                foreach (var i in _where)
+                {
+                    if (modelDict.ContainsKey(i.Key))
+                    {
+                        i.Value = modelDict[i.Key];
+                    }
+                    else
+                    {
+                        i.Value = null;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var i in _where)
+                {
+                    i.Value = this[i.Key].PInfo.GetValue(model, null);
+                }
             }
         }
     }
@@ -6531,6 +6783,13 @@ where rownumber between {1} and {2}
             {
                 return "`";
             }
+        }
+        public MySqlUpdateCollection() : base() { }
+        public MySqlUpdateCollection(object model, params string[] names
+            )
+            : base(model, names
+                  )
+        {
         }
     }
     /// <summary>
@@ -6903,6 +7162,57 @@ where rownumber between {1} and {2}
                 }
             }
             return this;
+        }
+    }
+    //public class PagingResultConverter : JsonConverter
+    //{
+    //    //是否开启自定义反序列化，值为true时，反序列化时会走ReadJson方法，值为false时，不走ReadJson方法，而是默认的反序列化
+    //    //public override bool CanRead => false;//net2.0不支持这种写法
+    //    public override bool CanRead { get { return false; } }
+    //    //是否开启自定义序列化，值为true时，序列化时会走WriteJson方法，值为false时，不走WriteJson方法，而是默认的序列化
+    //    //public override bool CanWrite => true;//net2.0不支持这种写法
+    //    public override bool CanWrite { get { return true; } }
+
+    //    public override bool CanConvert(Type objectType)
+    //    {
+    //        return true;
+    //    }
+
+    //    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+
+    //    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    //    {
+    //        //writer.WriteValue(((PFCustomStringType)value).ToString());
+    //        base.WriteJson(writer,  value,  serializer);
+    //    }
+    //}
+    /// <summary>
+    /// 为了解决JsonConvert MySqlDateTime 时报错CreateUnsupportedTypeException 的问题
+    /// </summary>
+    public class LongDateTimeConvert : Newtonsoft.Json.Converters.IsoDateTimeConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            var b = typeof(MySqlDateTime) == objectType;
+            if (b)
+            {
+                var aa = "aa";
+            }
+            return b;
+        }
+        //public LongDateTimeConvert() : base()
+        //{
+        //    base.DateTimeFormat = "yyyy/MM/dd HH:mm";
+        //}
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (value != null)
+            {
+                writer.WriteValue(((MySql.Data.Types.MySqlDateTime)value).Value.ToString(PFDataHelper.DateFormat));
+            }
         }
     }
     /// <summary>
@@ -10081,14 +10391,19 @@ Date:{1}
         /// 目标表主键(用于目标表不存在时生成表)
         /// </summary>
         public string[] DstTablePrimaryKeys { get; set; }
+        public string DstTableComment { get; set; }
         /// <summary>
         /// 目标表备注(用于目标表不存在时生成表)
         /// </summary>
-        public Dictionary<string,string> DstTableColumnComment { get; set; }
+        public Dictionary<string, string> DstTableColumnComment { get; set; }
         public string ProcedureName { get; set; }
         //public Action<SqlInsertCollection> BeforeInsertAction { get; set; }
         public Action<BaseSqlUpdateCollection> BeforeInsertAction { get; set; }
         public Action<DataRow> BeforeBulkAction { get; set; }
+        /// <summary>
+        /// 转移数据之前执行(常用于按月更新时先清除某月的数据)
+        /// </summary>
+        public Action<PFSqlTransferItem> BeforeTransferAction { get; set; }
         /// <summary>
         /// 转移数据之后(执行存储过程之前)的操作(如转Json,根据增量表更新主表等)
         /// </summary>
@@ -10142,7 +10457,7 @@ Date:{1}
         /// <summary>
         /// 为了保存一些常量,便于在AfterTransferAction 等方法里使用
         /// </summary>
-        public Dictionary<string,object> ViewData { get; set; }
+        public Dictionary<string, object> ViewData { get; set; }
     }
 
     public enum PFSqlType

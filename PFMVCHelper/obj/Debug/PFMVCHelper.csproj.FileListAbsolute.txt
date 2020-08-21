@@ -52,7 +52,6 @@ E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\Ubiety.Dns.Core.dll
 E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\Renci.SshNet.dll
 E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\System.Web.WebPages.Deployment.dll
 E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\PerfectHelper.pdb
-E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\Newtonsoft.Json.pdb
 E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\Newtonsoft.Json.xml
 E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\System.Web.Mvc.xml
 E:\svn\SaveDbReport\PFHelper\PFMVCHelper\bin\Debug\JWT.pdb

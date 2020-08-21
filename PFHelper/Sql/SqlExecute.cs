@@ -192,7 +192,10 @@ namespace Perfect
         }
 
         #region 超时设置
-        public const int HugeCommandTimeOut = 90000; //3600大量数据时的超时时间--benjamin 20190814
+        /// <summary>
+        ///3600大量数据时的超时时间,单位秒 --benjamin 20190814 
+        /// </summary>
+        public const int HugeCommandTimeOut = 90000; //
         public int CommandTimeOut
         {
             get

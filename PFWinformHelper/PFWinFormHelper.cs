@@ -14,6 +14,9 @@ namespace Perfect
         public static Color ErrorColor = Color.Red;
         public static Color FinishColor = Color.Blue;
         public static Color UnfinishColor = Color.Gray;
+        /// <summary>
+        /// flag 为false时候，退出执行耗时操作
+        /// </summary>
         public static bool MultiFuncLoadingFlag = false;
         public static void GridClear(this DataGridView grid)
         {

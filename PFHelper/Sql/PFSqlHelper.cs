@@ -12,6 +12,7 @@ namespace Perfect
 {
     public class PFSqlHelper
     {
+        private string monthConnectionKey= "YJQuery";//10.0.0.11
         private SqlConnection sqlConnect;
 
         public NameValueCollection ConnectStrings = new NameValueCollection();
@@ -281,7 +282,8 @@ namespace Perfect
 
         public string GetCMonth()
         {
-            string connectionString = GetConnectionString("10.0.0.11");
+            //string connectionString = GetConnectionString("10.0.0.11");
+            string connectionString = GetConnectionString(monthConnectionKey);            
             StartConnect(connectionString);
             object cmonth = GetSqlValue("declare @cmonth varchar(7);select top 1 @cmonth=left(cmonth,4)+'.'+right(cmonth,2) from databasetable order by cmonth desc;select @cmonth;");
             CloseConnect();
